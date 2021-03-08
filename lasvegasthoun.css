@@ -1,0 +1,26 @@
+.banknotes-row {
+  width: 1400px;
+  display: flex;
+}
+.banknotes-row .banknotes {
+  width: 466px;
+}
+.banknotes-row .banknotes .banknote {
+  background: lightyellow;
+  width: 466px;
+  height: 150px;
+}
+.banknotes-row.top {
+  align-items: flex-end;
+}
+.banknotes-row.bottom {
+  align-items: flex-start;
+}
+
+#casinos {
+  position: relative;
+  background-image: url("img/casinos.jpg");
+  background-position: 0px 0px;
+  width: 466px;
+  height: 288px;
+}

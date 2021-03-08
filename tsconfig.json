@@ -1,0 +1,16 @@
+{
+    "rootDir": ".", 
+    "compilerOptions": {
+      "target": "es5",
+      "module": "none",
+      "lib": ["dom", "esnext"],  
+      "sourceMap": false,
+      "outFile": "lasvegasthoun.js",
+    },
+    "files": [
+        "src/framework.d.ts",
+        "src/lasvegas.d.ts",
+        "src/lasvegas.ts",
+        "src/define.ts"
+    ]
+}

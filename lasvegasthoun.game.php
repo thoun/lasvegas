@@ -1,14 +1,21 @@
 <?php
+/*
+error: "Propagating error from GS 1 (method: createGame): BGA service error (1.studio.boardgamearena.com 06/03 17:48:19)"
+expected: 0
+stack: "#0 /var/tournoi/release/tournoi-210301-1253/www/game/module/mainsite/tablemanager.game.php(7637): APP_DbObject->gameserverNodeRequest('243198', 'createGame', Array)↵#1 /var/tournoi/release/tournoi-210301-1253/www/game/module/mainsite/tablemanager.game.php(5661): Tablemanager->startplaying('243198')↵#2 /var/tournoi/release/tournoi-210301-1253/www/action/table/table.action.php(137): Tablemanager->acceptGameStart('243198')↵#3 /var/tournoi/release/tournoi-210301-1253/www/include/webActionCore.inc.php(189): action_table->acceptGameStart()↵#4 /var/tournoi/release/tournoi-210301-1253/www/index.php(247): launchWebAction('table', 'action_table', 'acceptGameStart', false, false, NULL, true, false)↵#5 {main}"
+*/
+ // logs : https://studio.boardgamearena.com/1/lasvegasthoun/lasvegasthoun/logaccess.html?table=240799&err=1#bottom
+ // db : https://db.1.studio.boardgamearena.com/index.php?db=ebd_lasvegasthoun_240799
  /**
   *------
   * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
-  * LasVegasArea implementation : © <Your name here> <Your email address here>
+  * LasVegasThoun implementation : © <Your name here> <Your email address here>
   * 
   * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
   * See http://en.boardgamearena.com/#!doc/Studio for more information.
   * -----
   * 
-  * lasvegasarea.game.php
+  * lasvegasthoun.game.php
   *
   * This is the main file for your game logic.
   *
@@ -18,9 +25,9 @@
 
 
 require_once( APP_GAMEMODULE_PATH.'module/table/table.game.php' );
+require_once("modules/banknote.php");
 
-
-class LasVegasArea extends Table
+class LasVegasThoun extends Table
 {
 	function __construct( )
 	{
@@ -33,19 +40,22 @@ class LasVegasArea extends Table
         parent::__construct();
         
         self::initGameStateLabels( array( 
-            //    "my_first_global_variable" => 10,
-            //    "my_second_global_variable" => 11,
+            "player_number" => 10,
+            "round_number" => 11,
             //      ...
             //    "my_first_game_variant" => 100,
             //    "my_second_game_variant" => 101,
             //      ...
-        ) );        
+        ) );  
+        
+        $this->banknotes = self::getNew( "module.common.deck" );
+        $this->banknotes->init( "banknotes" );
 	}
 	
     protected function getGameName( )
     {
 		// Used for translations and stuff. Please do not modify.
-        return "lasvegasarea";
+        return "lasvegasthoun";
     }	
 
     /*
@@ -67,8 +77,7 @@ class LasVegasArea extends Table
         // Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
         $sql = "INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar) VALUES ";
         $values = array();
-        foreach( $players as $player_id => $player )
-        {
+        foreach( $players as $player_id => $player ) {
             $color = array_shift( $default_colors );
             $values[] = "('".$player_id."','$color','".$player['player_canal']."','".addslashes( $player['player_name'] )."','".addslashes( $player['player_avatar'] )."')";
         }
@@ -78,9 +87,10 @@ class LasVegasArea extends Table
         self::reloadPlayersBasicInfos();
         
         /************ Start the game initialization *****/
-
         // Init global values with their initial values
-        //self::setGameStateInitialValue( 'my_first_global_variable', 0 );
+        self::setGameStateInitialValue( 'player_number', count($players) );
+        // round number, zero-indexed. when round_number == player_number, game is over
+        self::setGameStateInitialValue( 'round_number', 0 );
         
         // Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
@@ -88,7 +98,13 @@ class LasVegasArea extends Table
         //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
 
         // TODO: setup the initial game situation here
-       
+
+        // Create banknotes
+        $banknotes = array();
+        foreach( $this->banknotesRepartition as $value => $number )  {
+            $banknotes[] = array( 'type' => $value, 'type_arg' => null, 'nbr' => $number);
+        }
+        $this->banknotes->createCards( $banknotes, 'deck' );
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -115,9 +131,18 @@ class LasVegasArea extends Table
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
         $sql = "SELECT player_id id, player_score score FROM player ";
         $result['players'] = self::getCollectionFromDb( $sql );
+
+        //$result['banknotes'] = [];
+        //for ($i=1;$i<=6;$i++) {
+            //$result['banknotes'][$i] = $this->getBankNotesFromDb($this->banknotes->getCardsInLocation( 'casino', $i ));
+        //}
   
         // TODO: Gather all information about current game situation (visible by player $current_player_id).
-  
+
+		$result['banknotes'] = [];
+        for ($i=1; $i<=6; $i++) {
+            $result['banknotes'][$i] = $this->getBankNotesFromDb($this->banknotes->getCardsInLocation( 'casino', $i ));
+        }
         return $result;
     }
 
@@ -133,8 +158,13 @@ class LasVegasArea extends Table
     */
     function getGameProgression()
     {
-        // TODO: compute and return the game progression
+		$players_nbr = self::getGameStateValue("player_number");
+        $roundPercent = 100 / $players_nbr;
 
+        $placedDices = 0;
+        $totalDices = $players_nbr * DICES_PER_PLAYER;  
+
+        return $roundPercent * self::getGameStateValue('round_number') + ($placedDices * $roundPercent / $totalDices);
         return 0;
     }
 
@@ -147,7 +177,9 @@ class LasVegasArea extends Table
         In this space, you can put any utility methods useful for your game logic
     */
 
-
+    function getBankNotesFromDb($dbBankNotes) {
+        return array_map(function($dbBankNote) { return new BankNote($dbBankNote); }, array_values($dbBankNotes));
+    }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
@@ -155,7 +187,7 @@ class LasVegasArea extends Table
 
     /*
         Each time a player is doing some game action, one of the methods below is called.
-        (note: each method below must match an input method in lasvegasarea.action.php)
+        (note: each method below must match an input method in lasvegasthoun.action.php)
     */
 
     /*
@@ -220,19 +252,31 @@ class LasVegasArea extends Table
         Here, you can create methods defined as "game state actions" (see "action" property in states.inc.php).
         The action method of state X is called everytime the current game state is set to X.
     */
-    
-    /*
-    
-    Example for game state "MyGameState":
 
-    function stMyGameState()
-    {
-        // Do some stuff ...
+    function stPlaceBills() {
+
+        $casinos = [];
+
+        // place bills on table
+        for ($i=1; $i<=6; $i++) {
+            $casinoValue = 0;
+            while ($casinoValue < 5) {
+                $bankNote = new BankNote($this->banknotes->pickCardForLocation( 'deck', 'casino', $i ));
+                //die(json_encode($bankNote).'==='.$bankNote->value);
+
+                $casinoValue += 10 /* $bankNote->value */;
+
+                $casinos[$i][] = $bankNote;
+            }            
+        }
+
+        self::notifyAllPlayers('banknotesPlaced', clienttranslate('New banknotes placed on casinos'), array(
+            'casinos' => $casinos
+        ));
         
-        // (very often) go to another gamestate
-        $this->gamestate->nextState( 'some_gamestate_transition' );
-    }    
-    */
+        // go to player turn
+        $this->gamestate->nextState( '' );
+    }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Zombie

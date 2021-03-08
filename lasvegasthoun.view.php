@@ -2,13 +2,13 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * LasVegasArea implementation : © <Your name here> <Your email address here>
+ * LasVegasThoun implementation : © <Your name here> <Your email address here>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  *
- * lasvegasarea.view.php
+ * lasvegasthoun.view.php
  *
  * This is your "view" file.
  *
@@ -17,7 +17,7 @@
  * _ when a player refreshes the game page (F5)
  *
  * "build_page" method allows you to dynamically modify the HTML generated for the game interface. In
- * particular, you can set here the values of variables elements defined in lasvegasarea_lasvegasarea.tpl (elements
+ * particular, you can set here the values of variables elements defined in lasvegasthoun_lasvegasthoun.tpl (elements
  * like {MY_VARIABLE_ELEMENT}), and insert HTML block elements (also defined in your HTML template file)
  *
  * Note: if the HTML of your game interface is always the same, you don't have to place anything here.
@@ -26,10 +26,10 @@
   
   require_once( APP_BASE_PATH."view/common/game.view.php" );
   
-  class view_lasvegasarea_lasvegasarea extends game_view
+  class view_lasvegasthoun_lasvegasthoun extends game_view
   {
     function getGameName() {
-        return "lasvegasarea";
+        return "lasvegasthoun";
     }    
   	function build_page( $viewArgs )
   	{		
@@ -64,7 +64,7 @@
         //      <!-- END myblock --> 
         
 
-        $this->page->begin_block( "lasvegasarea_lasvegasarea", "myblock" );
+        $this->page->begin_block( "lasvegasthoun_lasvegasthoun", "myblock" );
         foreach( $players as $player )
         {
             $this->page->insert_block( "myblock", array( 

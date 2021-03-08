@@ -2,27 +2,27 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * LasVegasArea implementation : © <Your name here> <Your email address here>
+ * LasVegasThoun implementation : © <Your name here> <Your email address here>
  *
  * This code has been produced on the BGA studio platform for use on https://boardgamearena.com.
  * See http://en.doc.boardgamearena.com/Studio for more information.
  * -----
  * 
- * lasvegasarea.action.php
+ * lasvegasthoun.action.php
  *
- * LasVegasArea main action entry point
+ * LasVegasThoun main action entry point
  *
  *
  * In this file, you are describing all the methods that can be called from your
  * user interface logic (javascript).
  *       
  * If you define a method "myAction" here, then you can call it from your javascript code with:
- * this.ajaxcall( "/lasvegasarea/lasvegasarea/myAction.html", ...)
+ * this.ajaxcall( "/lasvegasthoun/lasvegasthoun/myAction.html", ...)
  *
  */
   
   
-  class action_lasvegasarea extends APP_GameAction
+  class action_lasvegasthoun extends APP_GameAction
   { 
     // Constructor: please do not modify
    	public function __default()
@@ -34,7 +34,7 @@
   	    }
   	    else
   	    {
-            $this->view = "lasvegasarea_lasvegasarea";
+            $this->view = "lasvegasthoun_lasvegasthoun";
             self::trace( "Complete reinitialization of board game" );
       }
   	} 

@@ -2,7 +2,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * LasVegasArea implementation : © <Your name here> <Your email address here>
+ * LasVegasThoun implementation : © thoun <Your email address here>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -10,7 +10,7 @@
  * 
  * states.inc.php
  *
- * LasVegasArea game states description
+ * LasVegasThoun game states description
  *
  */
 
@@ -47,57 +47,74 @@
                             method).
 */
 
+
+require_once("modules/constants.inc.php");
+
 //    !! It is not a good idea to modify this file when a game is running !!
 
- 
 $machinestates = array(
 
     // The initial state. Please do not modify.
-    1 => array(
+    ST_BGA_GAME_SETUP => array(
         "name" => "gameSetup",
-        "description" => "",
+        "description" => clienttranslate("Game setup"),
         "type" => "manager",
         "action" => "stGameSetup",
-        "transitions" => array( "" => 2 )
+        "transitions" => array( "" => ST_PLACE_BILLS )
     ),
-    
-    // Note: ID=2 => your first state
+    	
+	ST_PLACE_BILLS => array(
+        "name" => "placeBills",
+        "description" => "",
+        "type" => "game",
+        "action" => "stPlaceBills", 
+        "transitions" => array( "" => ST_PLAYER_TURN )
+    ),  
 
-    2 => array(
-    		"name" => "playerTurn",
-    		"description" => clienttranslate('${actplayer} must play a card or pass'),
-    		"descriptionmyturn" => clienttranslate('${you} must play a card or pass'),
-    		"type" => "activeplayer",
-    		"possibleactions" => array( "playCard", "pass" ),
-    		"transitions" => array( "playCard" => 2, "pass" => 2 )
+    ST_PLAYER_TURN => array(
+    	"name" => "playerTurn",
+    	"description" => clienttranslate('${actplayer} must choose a casino to place your dices'),
+    	"descriptionmyturn" => clienttranslate('${you} must choose a casino to place your dices'),
+    	"type" => "activeplayer",
+        // "args" => "argPlayerTurn",
+    	"possibleactions" => array( "chooseCasino" ),
+    	"transitions" => array( 
+            "chooseCasino" => ST_NEXT_PLAYER
+        )
     ),
-    
-/*
-    Examples:
-    
-    2 => array(
+	
+	ST_NEXT_PLAYER => array(
         "name" => "nextPlayer",
-        "description" => '',
+        "description" => "",
         "type" => "game",
         "action" => "stNextPlayer",
-        "updateGameProgression" => true,   
-        "transitions" => array( "endGame" => 99, "nextPlayer" => 10 )
+        "updateGameProgression" => true,
+        "transitions" => array( 
+            "nextPlayer" => ST_PLAYER_TURN, 
+            "collectBills" => ST_COLLECT_BILLS
+        )
     ),
-    
-    10 => array(
-        "name" => "playerTurn",
-        "description" => clienttranslate('${actplayer} must play a card or pass'),
-        "descriptionmyturn" => clienttranslate('${you} must play a card or pass'),
-        "type" => "activeplayer",
-        "possibleactions" => array( "playCard", "pass" ),
-        "transitions" => array( "playCard" => 2, "pass" => 2 )
-    ), 
 
-*/    
+    ST_COLLECT_BILLS => array(
+      "name" => "collectBills",
+      "description" => "",
+      "type" => "game",
+      "action" => "stCollectBills",
+      "transitions" => array( "setFirstPlayer" => ST_SET_FIRST_PLAYER, "endGame" => ST_END_GAME )
+    ),
+
+    ST_SET_FIRST_PLAYER => array(
+      "name" => "setFirstPlayer",
+      "description" => "",
+      "type" => "game",
+      "action" => "stSetFirstPlayer",
+      "transitions" => array( "newTurn" => ST_PLACE_BILLS )
+    ),
+
    
     // Final state.
-    // Please do not modify (and do not overload action/args methods).
-    99 => array(
+    // Please do not modify.
+    ST_END_GAME => array(
         "name" => "gameEnd",
         "description" => clienttranslate("End of game"),
         "type" => "manager",
@@ -106,6 +123,3 @@ $machinestates = array(
     )
 
 );
-
-
-

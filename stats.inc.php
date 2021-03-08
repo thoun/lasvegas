@@ -3,7 +3,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * LasVegasArea implementation : © <Your name here> <Your email address here>
+ * LasVegasThoun implementation : © <Your name here> <Your email address here>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -11,7 +11,7 @@
  *
  * stats.inc.php
  *
- * LasVegasArea game statistics description
+ * LasVegasThoun game statistics description
  *
  */
 
@@ -52,9 +52,9 @@ $stats_type = array(
     // Statistics global to table
     "table" => array(
 
-        "turns_number" => array("id"=> 10,
+        /*"turns_number" => array("id"=> 10,
                     "name" => totranslate("Number of turns"),
-                    "type" => "int" ),
+                    "type" => "int" ),*/
 
 /*
         Examples:
@@ -73,9 +73,9 @@ $stats_type = array(
     // Statistics existing for each player
     "player" => array(
 
-        "turns_number" => array("id"=> 10,
+        /*"turns_number" => array("id"=> 10,
                     "name" => totranslate("Number of turns"),
-                    "type" => "int" ),
+    "type" => "int" ),*/
     
 /*
         Examples:    

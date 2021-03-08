@@ -3,13 +3,13 @@
 <!-- 
 --------
 -- BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
--- LasVegasArea implementation : © <Your name here> <Your email address here>
+-- LasVegasThoun implementation : © <Your name here> <Your email address here>
 -- 
 -- This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
 -- See http://en.boardgamearena.com/#!doc/Studio for more information.
 -------
 
-    lasvegasarea_lasvegasarea.tpl
+    lasvegasthoun_lasvegasthoun.tpl
     
     This is the HTML template of your game.
     
@@ -25,9 +25,32 @@
     Please REMOVE this comment before publishing your game on BGA
 -->
 
+<div class="banknotes-row top">
+    <div id="banknotes1" class="banknotes">
+        <div class="banknote"></div>
+        <div class="banknote"></div>
+    </div>
+    <div id="banknotes2" class="banknotes">
+        <div class="banknote"></div>
+    </div>
+    <div id="banknotes3" class="banknotes"></div>
+</div>
 
-This is your game interface. You can edit this HTML in your ".tpl" file.
+<div id="casinos">
+</div>
 
+<div class="banknotes-row bottom">
+    <div id="banknotes4" class="banknotes"></div>
+    <div id="banknotes5" class="banknotes">
+        <div class="banknote"></div>
+        <div class="banknote"></div>
+    </div>
+    <div id="banknotes6" class="banknotes">
+        <div class="banknote"></div>
+    </div>
+</div>
+
+<div id="dices"></div>
 
 <script type="text/javascript">
 
