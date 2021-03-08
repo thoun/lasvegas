@@ -1,26 +1,79 @@
-.banknotes-row {
-  width: 1400px;
-  display: flex;
+#dices-selector {
+  text-align: center;
 }
-.banknotes-row .banknotes {
-  width: 466px;
+
+.dice {
+  display: inline-block;
+  position: relative;
+  background-image: url("img/dices.png");
+  background-position: 0px 0px;
+  width: 33px;
+  height: 33px;
+  margin: 3px;
 }
-.banknotes-row .banknotes .banknote {
-  background: lightyellow;
-  width: 466px;
-  height: 150px;
+.dice.dice1 {
+  background-position-x: 0%;
 }
-.banknotes-row.top {
-  align-items: flex-end;
+.dice.dice2 {
+  background-position-x: 20%;
 }
-.banknotes-row.bottom {
-  align-items: flex-start;
+.dice.dice3 {
+  background-position-x: 40%;
+}
+.dice.dice4 {
+  background-position-x: 60%;
+}
+.dice.dice5 {
+  background-position-x: 80%;
+}
+.dice.dice6 {
+  background-position-x: 100%;
+}
+.dice .dice-overlay {
+  width: 100%;
+  height: 100%;
+  opacity: 0.6;
+  border-radius: 6px;
 }
 
 #casinos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+#casinos .casino_wrapper {
+  display: inline-block;
+}
+#casinos .casino_wrapper .casino {
   position: relative;
-  background-image: url("img/casinos.jpg");
+  background-image: url("img/casinos.png");
   background-position: 0px 0px;
   width: 466px;
   height: 288px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#casinos .casino_wrapper .casino#casino1 {
+  background-position-x: 0%;
+}
+#casinos .casino_wrapper .casino#casino2 {
+  background-position-x: 20%;
+}
+#casinos .casino_wrapper .casino#casino3 {
+  background-position-x: 40%;
+}
+#casinos .casino_wrapper .casino#casino4 {
+  background-position-x: 60%;
+}
+#casinos .casino_wrapper .casino#casino5 {
+  background-position-x: 80%;
+}
+#casinos .casino_wrapper .casino#casino6 {
+  background-position-x: 100%;
+}
+#casinos .casino_wrapper .casino.selectable {
+  border: 4px red dashed;
+  cursor: pointer;
 }

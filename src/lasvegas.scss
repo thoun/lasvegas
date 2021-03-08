@@ -1,30 +1,60 @@
-.banknotes-row {
-    width: 1400px;
-    display: flex;
+#dices-selector {
+    text-align: center;
+}
 
-    .banknotes {
-        width: 466px;
+.dice {
+    display: inline-block;
+    position: relative;
+    background-image: url('img/dices.png');
+    background-position: 0px 0px;
+    width: 33px;
+    height: 33px;
+    margin: 3px;
 
-        .banknote {
-            background: lightyellow;
-            width: 466px;
-            height: 150px;
+    @for $i from 1 through 6 {
+        &.dice#{$i}{
+          background-position-x: ($i - 1)/5 * 100%;
         }
     }
 
-    &.top {
-        align-items: flex-end;
-    }
-
-    &.bottom {
-        align-items: flex-start;
+    .dice-overlay {
+        width: 100%;
+        height: 100%;
+        opacity: 0.6;
+        border-radius: 6px;
     }
 }
 
 #casinos {
-    position: relative;
-    background-image: url('img/casinos.jpg');
-    background-position: 0px 0px;
-    width: 466px;
-    height: 288px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+
+    .casino_wrapper {
+        display: inline-block;
+    
+        .casino {
+            position: relative;
+            background-image: url('img/casinos.png');
+            background-position: 0px 0px;
+            width: 466px;
+            height: 288px;
+            box-sizing: border-box;
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+    
+            @for $i from 1 through 6 {
+                &#casino#{$i}{
+                  background-position-x: ($i - 1)/5 * 100%;
+                }
+            }
+    
+            &.selectable {
+                border: 4px red dashed;
+                cursor: pointer;
+            }
+        }
+    }
 }

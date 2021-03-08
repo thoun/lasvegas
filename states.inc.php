@@ -76,7 +76,7 @@ $machinestates = array(
     	"description" => clienttranslate('${actplayer} must choose a casino to place your dices'),
     	"descriptionmyturn" => clienttranslate('${you} must choose a casino to place your dices'),
     	"type" => "activeplayer",
-        // "args" => "argPlayerTurn",
+        "args" => "argPlayerTurn",
     	"possibleactions" => array( "chooseCasino" ),
     	"transitions" => array( 
             "chooseCasino" => ST_NEXT_PLAYER
@@ -100,15 +100,7 @@ $machinestates = array(
       "description" => "",
       "type" => "game",
       "action" => "stCollectBills",
-      "transitions" => array( "setFirstPlayer" => ST_SET_FIRST_PLAYER, "endGame" => ST_END_GAME )
-    ),
-
-    ST_SET_FIRST_PLAYER => array(
-      "name" => "setFirstPlayer",
-      "description" => "",
-      "type" => "game",
-      "action" => "stSetFirstPlayer",
-      "transitions" => array( "newTurn" => ST_PLACE_BILLS )
+      "transitions" => array( "nextPlayer" => ST_PLAYER_TURN, "endGame" => ST_END_GAME )
     ),
 
    

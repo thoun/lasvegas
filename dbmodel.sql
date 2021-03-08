@@ -8,10 +8,11 @@
 -- -----
 
 CREATE TABLE IF NOT EXISTS `dices` (
+  `dice_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `value` TINYINT(1) unsigned NOT NULL,
   `placed` TINYINT(1) unsigned NOT NULL DEFAULT false,
   `player_id` INT(10) unsigned NOT NULL,
-  PRIMARY KEY (`player_id`, `value`)
+  PRIMARY KEY (`dice_id`)
 ) ENGINE=InnoDB;
 
 -- we use deck, as banknotes is similar to card

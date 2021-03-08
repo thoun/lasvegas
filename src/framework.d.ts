@@ -23,7 +23,7 @@ interface Notif<T> {
 
 /* TODO repace Function by (..params) => void */
 interface Dojo {
-    place: Function;
+    place: (html: string, nodeId: string, action?: string) => void;
     style: Function;
     hitch: Function;
     hasClass: (nodeId: string, className: string) => boolean;

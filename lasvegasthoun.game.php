@@ -5,7 +5,7 @@ expected: 0
 stack: "#0 /var/tournoi/release/tournoi-210301-1253/www/game/module/mainsite/tablemanager.game.php(7637): APP_DbObject->gameserverNodeRequest('243198', 'createGame', Array)↵#1 /var/tournoi/release/tournoi-210301-1253/www/game/module/mainsite/tablemanager.game.php(5661): Tablemanager->startplaying('243198')↵#2 /var/tournoi/release/tournoi-210301-1253/www/action/table/table.action.php(137): Tablemanager->acceptGameStart('243198')↵#3 /var/tournoi/release/tournoi-210301-1253/www/include/webActionCore.inc.php(189): action_table->acceptGameStart()↵#4 /var/tournoi/release/tournoi-210301-1253/www/index.php(247): launchWebAction('table', 'action_table', 'acceptGameStart', false, false, NULL, true, false)↵#5 {main}"
 */
  // logs : https://studio.boardgamearena.com/1/lasvegasthoun/lasvegasthoun/logaccess.html?table=240799&err=1#bottom
- // db : https://db.1.studio.boardgamearena.com/index.php?db=ebd_lasvegasthoun_240799
+ // db : https://db.1.studio.boardgamearena.com/index.php?db=ebd_lasvegasthoun_253410
  /**
   *------
   * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
@@ -26,6 +26,7 @@ stack: "#0 /var/tournoi/release/tournoi-210301-1253/www/game/module/mainsite/tab
 
 require_once( APP_GAMEMODULE_PATH.'module/table/table.game.php' );
 require_once("modules/banknote.php");
+require_once("modules/dice.php");
 
 class LasVegasThoun extends Table
 {
@@ -41,11 +42,7 @@ class LasVegasThoun extends Table
         
         self::initGameStateLabels( array( 
             "player_number" => 10,
-            "round_number" => 11,
-            //      ...
-            //    "my_first_game_variant" => 100,
-            //    "my_second_game_variant" => 101,
-            //      ...
+            "round_number" => 11
         ) );  
         
         $this->banknotes = self::getNew( "module.common.deck" );
@@ -99,12 +96,24 @@ class LasVegasThoun extends Table
 
         // TODO: setup the initial game situation here
 
+        // Create dices
+        $sql = "INSERT INTO dices (`value`, `placed`, `player_id`) VALUES ";
+        $values = array();
+        foreach( $players as $player_id => $player ) {
+            for ($i=0; $i<DICES_PER_PLAYER; $i++) {
+                $values[] = "(0, false, $player_id)";
+            }
+        }
+        $sql .= implode( $values, ',' );
+        self::DbQuery( $sql );
+
         // Create banknotes
         $banknotes = array();
         foreach( $this->banknotesRepartition as $value => $number )  {
             $banknotes[] = array( 'type' => $value, 'type_arg' => null, 'nbr' => $number);
         }
         $this->banknotes->createCards( $banknotes, 'deck' );
+        $this->banknotes->shuffle( 'deck' );
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -125,23 +134,30 @@ class LasVegasThoun extends Table
     {
         $result = array();
     
-        $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
-    
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
         $sql = "SELECT player_id id, player_score score FROM player ";
         $result['players'] = self::getCollectionFromDb( $sql );
-
-        //$result['banknotes'] = [];
-        //for ($i=1;$i<=6;$i++) {
-            //$result['banknotes'][$i] = $this->getBankNotesFromDb($this->banknotes->getCardsInLocation( 'casino', $i ));
-        //}
   
         // TODO: Gather all information about current game situation (visible by player $current_player_id).
 
-		$result['banknotes'] = [];
+        $dices = $this->getDices(null, true);
+
+		$result['casinos'] = [];
         for ($i=1; $i<=6; $i++) {
-            $result['banknotes'][$i] = $this->getBankNotesFromDb($this->banknotes->getCardsInLocation( 'casino', $i ));
+            $casino = new stdClass();
+
+            $bankNotes = $this->getBankNotesFromDb($this->banknotes->getCardsInLocation( 'casino', $i ));
+            $casino->banknotes = array_map(function($bankNote) { return $bankNote->value; }, $bankNotes);
+
+            $casinoDices = array();
+            foreach( $result['players'] as $player ) {
+                $player_id = intval($player['id']);
+                $casinoDices[$player_id] = count(array_filter($dices, function($dice) use ($player_id, $i) { return $dice->player_id == $player_id && $dice->value == $i; }));
+            }
+            $casino->dices = $casinoDices;
+
+            $result['casinos'][$i] = $casino;
         }
         return $result;
     }
@@ -181,6 +197,16 @@ class LasVegasThoun extends Table
         return array_map(function($dbBankNote) { return new BankNote($dbBankNote); }, array_values($dbBankNotes));
     }
 
+    function getDices($player_id, $placed) {
+        $sql = "SELECT `dice_id`, `value`, `placed`, `player_id` FROM dices WHERE ";
+        if ($player_id) {
+            $sql .= "player_id = $player_id AND ";
+        }
+        $sql .= "placed = ".json_encode($placed);
+        $dbDices = self::getCollectionFromDB( $sql );
+        return array_map(function($dbDice) { return new Dice($dbDice); }, array_values($dbDices));
+    }
+
 //////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
 //////////// 
@@ -190,31 +216,13 @@ class LasVegasThoun extends Table
         (note: each method below must match an input method in lasvegasthoun.action.php)
     */
 
-    /*
-    
-    Example:
-
-    function playCard( $card_id )
-    {
-        // Check that this is the player's turn and that it is a "possible action" at this game state (see states.inc.php)
-        self::checkAction( 'playCard' ); 
-        
+    function chooseCasino( $casino ) {
         $player_id = self::getActivePlayerId();
-        
-        // Add your game logic to play a card there 
-        ...
-        
-        // Notify all players about the card played
-        self::notifyAllPlayers( "cardPlayed", clienttranslate( '${player_name} plays ${card_name}' ), array(
-            'player_id' => $player_id,
-            'player_name' => self::getActivePlayerName(),
-            'card_name' => $card_name,
-            'card_id' => $card_id
-        ) );
-          
+        self::DbQuery( "UPDATE dices SET `placed` = true WHERE `value` = $casino AND `player_id` = $player_id" );
+        self::DbQuery( "UPDATE dices SET `value` = 0 WHERE `placed` = false AND `player_id` = $player_id" );
+
+        $this->gamestate->nextState('chooseCasino');
     }
-    
-    */
 
     
 //////////////////////////////////////////////////////////////////////////////
@@ -226,23 +234,26 @@ class LasVegasThoun extends Table
         These methods function is to return some additional information that is specific to the current
         game state.
     */
+    
+    function argPlayerTurn() {
+        $player_id = self::getActivePlayerId();
+        $dices = $this->getDices($player_id, false);
 
-    /*
-    
-    Example for game state "MyGameState":
-    
-    function argMyGameState()
-    {
-        // Get some values from the current game situation in database...
+        foreach ($dices as &$dice){
+            if ($dice->value == 0) {
+                $dice->value = bga_rand( 1, 6 );
+                self::DbQuery( "UPDATE dices SET `value`=".$dice->value." where `dice_id`=".$dice->id );
+            }
+        }
+
+        $dicesValues = array_map(function($dice) { return $dice->value; }, array_values($dices));
+        sort($dicesValues);
     
         // return values:
         return array(
-            'variable1' => $value1,
-            'variable2' => $value2,
-            ...
+            'dices' => $dicesValues
         );
-    }    
-    */
+    }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state actions
@@ -254,28 +265,90 @@ class LasVegasThoun extends Table
     */
 
     function stPlaceBills() {
+        // set first player
+        $players = $this->loadPlayersBasicInfos();
+        $firstPlayerId = intval(array_keys($players)[self::getGameStateValue("round_number")]);
+        $this->gamestate->changeActivePlayer( $firstPlayerId );
+
+        // reset dices
+        self::DbQuery( "UPDATE dices SET `placed` = false WHERE `value` = 0" );
 
         $casinos = [];
 
         // place bills on table
         for ($i=1; $i<=6; $i++) {
             $casinoValue = 0;
-            while ($casinoValue < 5) {
+            while ($casinoValue < 5 
+              && (!array_key_exists($i, $casinos) || count($casinos[$i]) < 10) // infinite loop protection
+            ) {
                 $bankNote = new BankNote($this->banknotes->pickCardForLocation( 'deck', 'casino', $i ));
-                //die(json_encode($bankNote).'==='.$bankNote->value);
 
-                $casinoValue += 10 /* $bankNote->value */;
+                $casinoValue += $bankNote->value;
 
                 $casinos[$i][] = $bankNote;
             }            
         }
 
-        self::notifyAllPlayers('banknotesPlaced', clienttranslate('New banknotes placed on casinos'), array(
-            'casinos' => $casinos
+        self::notifyAllPlayers('newTurn', clienttranslate('firstPlayerId is the first player'), array(
+            // 'casinos' => $casinos,
+            'firstPlayerId' => $firstPlayerId
         ));
         
         // go to player turn
         $this->gamestate->nextState( '' );
+    }
+
+    function stNextPlayer() {
+        $player_id = self::activeNextPlayer();
+
+        $sql = "SELECT count(*) FROM dices WHERE `placed` = false";
+        $end = intval(self::getUniqueValueFromDB( $sql )) == 0;
+
+        $protection = 0;
+        $endForPlayer = 0;
+        while ($endForPlayer == 0
+         && $protection < 10 // infinite loop protection
+        ) {
+            $sql = "SELECT count(*) FROM dices WHERE `placed` = false and `player_id` = $player_id";
+            $endForPlayer = intval(self::getUniqueValueFromDB( $sql )) == 0;
+            // if player has no dice we skip to next player
+            if ($endForPlayer == 0) {
+                $player_id = self::activeNextPlayer();
+            }
+            $protection++;
+        }
+
+        self::giveExtraTime($player_id);
+
+        $this->gamestate->nextState($end ? 'collectBills' : 'nextPlayer' );
+    }
+
+    function stCollectBills() {
+        $round_number = self::getGameStateValue("round_number") + 1;
+
+        $endGame = $round_number == self::getGameStateValue("player_number");
+
+        for ($i = 1; $i <= 6; $i++) {
+
+            // TODO count dices by player
+
+            $hasDuplicates = true; // TODO
+            if ($hasDuplicates) {
+                self::notifyAllPlayers('removeDuplicates', clienttranslate('Remove duplicates from casino ${casino}'), array(
+                    'casino' => $i
+                ));
+
+                // TODO remove duplicates from dices count
+            }
+
+            // TODO match available banknotes to winners
+            /*self::notifyAllPlayers('collectBanknotes', clienttranslate('xxx wins ${facial_value}\\$'), array(
+                'facial_value' => $value*10000,
+                'value' =>$value
+            ));*/
+        }
+
+        $this->gamestate->nextState($end ? 'endGame' : 'nextPlayer' );
     }
 
 //////////////////////////////////////////////////////////////////////////////

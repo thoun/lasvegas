@@ -2,6 +2,11 @@
  * Your game interfaces
  */
 
+interface CasinoGamedatas {
+    banknotes: number[];
+    dices: { [playerId: number]: number };
+}
+
 interface LasVegasGamedatas {
     current_player_id: string;
     decision: {decision_type: string};
@@ -15,4 +20,13 @@ interface LasVegasGamedatas {
     tablespeed: string;
 
     // Add here variables you set up in getAllDatas
+    casinos: CasinoGamedatas[];
+}
+
+interface LasVegasGame extends Game {
+    casinoSelected: (casino: number) => void;
+}
+
+interface EnteringPlayerTurnArgs {
+    dices: number[];
 }
