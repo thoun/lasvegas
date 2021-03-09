@@ -171,11 +171,13 @@ class LasVegas implements LasVegasGame {
             }
 
             Array.from(document.getElementById('dices-selector').getElementsByClassName( `dice${casino}`)).forEach((element: HTMLDivElement) => {
+                element.style.zIndex = '10';
                 const animation = (this as any).slideToObject( element, `casino${casino}` );
                 dojo.connect(animation, 'onEnd', dojo.hitch(this, () => {
                     element.style.top = 'unset';
                     element.style.left = 'unset';
                     element.style.position = 'unset';
+                    element.style.zIndex = 'unset';
                     document.getElementById(`casino${casino}`).appendChild(element);
                 }));
                 animation.play();

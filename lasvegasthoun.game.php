@@ -300,27 +300,36 @@ class LasVegasThoun extends Table
 
     function stNextPlayer() {
         $player_id = self::activeNextPlayer();
-
-        $sql = "SELECT count(*) FROM dices WHERE `placed` = false";
-        $end = intval(self::getUniqueValueFromDB( $sql )) == 0;
-
-        $protection = 0;
-        $endForPlayer = 0;
-        while ($endForPlayer == 0
-         && $protection < 10 // infinite loop protection
-        ) {
-            $sql = "SELECT count(*) FROM dices WHERE `placed` = false and `player_id` = $player_id";
-            $endForPlayer = intval(self::getUniqueValueFromDB( $sql )) == 0;
-            // if player has no dice we skip to next player
-            if ($endForPlayer == 0) {
-                $player_id = self::activeNextPlayer();
-            }
-            $protection++;
-        }
-
         self::giveExtraTime($player_id);
 
-        $this->gamestate->nextState($end ? 'collectBills' : 'nextPlayer' );
+        //self::debug('[GBA] $player_id='.$player_id.' active player_id='.self::getActivePlayerId());
+        //self::dump('[GBA] players', $this->loadPlayersBasicInfos());
+
+        $sql = "SELECT count(*) FROM dices WHERE `placed` = false";
+        $dicesToPlace = intval(self::getUniqueValueFromDB( $sql ));
+        self::debug('[GBA] $dicesToPlace='.$dicesToPlace);
+        if ($dicesToPlace == 0) {
+            $this->gamestate->nextState('collectBills');
+        } else {
+            $protection = 0;
+            $endForPlayer = 0;
+            while ($endForPlayer == 0
+            && $protection < 10 // infinite loop protection
+            ) {
+                $sql = "SELECT count(*) FROM dices WHERE `placed` = false and `player_id` = ".self::getActivePlayerId();
+                $endForPlayer = intval(self::getUniqueValueFromDB( $sql )) == 0;
+                // if player has no dice we skip to next player
+                //self::debug('[GBA] goes on the loop');
+                if ($endForPlayer) {
+                    //self::debug('[GBA] $endForPlayer true');
+                    self::activeNextPlayer();
+                }
+                $protection++;
+            }
+
+
+            $this->gamestate->nextState('nextPlayer');
+        }
     }
 
     function stCollectBills() {
@@ -348,7 +357,7 @@ class LasVegasThoun extends Table
             ));*/
         }
 
-        $this->gamestate->nextState($end ? 'endGame' : 'nextPlayer' );
+        $this->gamestate->nextState($endGame ? 'endGame' : 'nextPlayer' );
     }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -134,11 +134,13 @@ var LasVegas = /** @class */ (function () {
             return;
         }
         Array.from(document.getElementById('dices-selector').getElementsByClassName("dice" + casino)).forEach(function (element) {
+            element.style.zIndex = '10';
             var animation = _this.slideToObject(element, "casino" + casino);
             dojo.connect(animation, 'onEnd', dojo.hitch(_this, function () {
                 element.style.top = 'unset';
                 element.style.left = 'unset';
                 element.style.position = 'unset';
+                element.style.zIndex = 'unset';
                 document.getElementById("casino" + casino).appendChild(element);
             }));
             animation.play();
