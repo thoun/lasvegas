@@ -100,7 +100,7 @@ $machinestates = array(
       "description" => "",
       "type" => "game",
       "action" => "stCollectBills",
-      "transitions" => array( "nextPlayer" => ST_PLAYER_TURN, "endGame" => ST_END_GAME )
+      "transitions" => array( "placeBills" => ST_PLACE_BILLS, "endGame" => ST_END_GAME )
     ),
 
    

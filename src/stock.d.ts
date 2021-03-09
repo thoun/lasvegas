@@ -27,7 +27,7 @@ interface Stock {
     getSelectedItems: () => any[];
     unselectAll: () => void;
     removeAll: () => void;
-    removeFromStockById: (id: string) => void;
+    removeFromStockById: (id: string, to?: string) => void;
     removeAllTo: (to: string) => void;
     unselectItem: (id: string) => void;
     setOverlap: (horizontal_percent: number, vertical_percent: number) => void;

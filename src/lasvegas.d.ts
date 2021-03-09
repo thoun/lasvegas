@@ -2,8 +2,14 @@
  * Your game interfaces
  */
 
+ interface Banknote {
+    id: number;
+    location: string;
+    location_arg: number;
+    value: number;
+}
 interface CasinoGamedatas {
-    banknotes: number[];
+    banknotes: Banknote[];
     dices: { [playerId: number]: number };
 }
 
@@ -29,4 +35,34 @@ interface LasVegasGame extends Game {
 
 interface EnteringPlayerTurnArgs {
     dices: number[];
+}
+
+interface NotifNewTurnArgs {
+    casinos: any;
+    playerId: number;
+}
+
+interface NotifDicesPlayedArgs {
+    casino: number;
+    playerId: number;
+}
+
+interface NotifRemoveDuplicatesArgs {
+    duplicates: number[];
+}
+
+interface NotifCollectBanknoteArgs {
+    casino: number;
+    playerId: number;
+    id: number;
+    value: number;
+}
+
+interface NotifRemoveBanknoteArgs {
+    casino: number;
+    id: number;
+}
+
+interface NotifRemoveDicesArgs {
+    casino: number;
 }

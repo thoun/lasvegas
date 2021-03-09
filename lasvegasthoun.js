@@ -16,9 +16,9 @@ var Casino = /** @class */ (function () {
         this.stock.image_items_per_row = 1;
         this.stock.setSelectionMode(0);
         for (var value = 1; value <= 9; value++) {
-            this.stock.addItemType(value, 10 - value, g_gamethemeurl + 'img/banknotes.png', value - 1);
+            this.stock.addItemType(value, 10 - value, g_gamethemeurl + "img/banknotes.png", value - 1);
         }
-        this.banknotes.forEach(function (banknote, index) { return _this.stock.addToStockWithId(banknote, "" + (index * 10 + banknote), 'topbar'); });
+        this.banknotes.forEach(function (banknote) { return _this.stock.addToStockWithId(banknote.value, "" + banknote.id, 'topbar'); });
     };
     Casino.prototype.setSelectable = function (selectable) {
         this.selectable = selectable;
@@ -28,6 +28,18 @@ var Casino = /** @class */ (function () {
         if (this.selectable) {
             this.game.casinoSelected(this.casino);
         }
+    };
+    Casino.prototype.slideBanknoteTo = function (banknoteId, playerId) {
+        this.stock.removeFromStockById("" + banknoteId, "playertable-" + playerId);
+    };
+    Casino.prototype.removeBanknote = function (banknoteId) {
+        this.stock.removeFromStockById("" + banknoteId);
+    };
+    Casino.prototype.removeDices = function () {
+        var _this = this;
+        Array.from(document.getElementById("casino" + this.casino).getElementsByClassName("dice")).forEach(function (element) {
+            _this.game.fadeOutAndDestroy(element);
+        });
     };
     return Casino;
 }());
@@ -68,6 +80,7 @@ var LasVegas = /** @class */ (function () {
         for (var i = 1; i <= 6; i++) {
             _loop_1(i);
         }
+        this.setupNotifications();
         console.log("Ending game setup");
     };
     ///////////////////////////////////////////////////
@@ -104,7 +117,7 @@ var LasVegas = /** @class */ (function () {
         }
     };
     LasVegas.prototype.onLeavingPlayerTurn = function () {
-        this.setTableDices();
+        //this.setTableDices();
         this.casinos.forEach(function (casino) { return casino.setSelectable(false); });
     };
     // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
@@ -129,10 +142,19 @@ var LasVegas = /** @class */ (function () {
         });
     };
     LasVegas.prototype.casinoSelected = function (casino) {
-        var _this = this;
         if (!this.checkAction('chooseCasino')) {
             return;
         }
+        this.moveDicesToCasino(casino, this.getActivePlayerId());
+        this.takeAction("chooseCasino", {
+            casino: casino
+        });
+    };
+    LasVegas.prototype.createDiceHtml = function (number, color) {
+        return "<div class=\"dice dice" + number + "\"><div class=\"dice-overlay\" style=\"background: #" + color + "\"></div></div>";
+    };
+    LasVegas.prototype.moveDicesToCasino = function (casino, playerId) {
+        var _this = this;
         Array.from(document.getElementById('dices-selector').getElementsByClassName("dice" + casino)).forEach(function (element) {
             element.style.zIndex = '10';
             var animation = _this.slideToObject(element, "casino" + casino);
@@ -145,12 +167,10 @@ var LasVegas = /** @class */ (function () {
             }));
             animation.play();
         });
-        this.takeAction("chooseCasino", {
-            casino: casino
+        Array.from(document.getElementById('dices-selector').getElementsByClassName("dice")).filter(function (element) { return !element.classList.contains("dice" + casino); }).forEach(function (element) {
+            //(this as any).slideToObjectAndDestroy(element, `overall_player_board_${playerId}`);
+            _this.fadeOutAndDestroy(element);
         });
-    };
-    LasVegas.prototype.createDiceHtml = function (number, color) {
-        return "<div class=\"dice dice" + number + "\"><div class=\"dice-overlay\" style=\"background: #" + color + "\"></div></div>";
     };
     ///////////////////////////////////////////////////
     //// Reaction to cometD notifications
@@ -164,33 +184,57 @@ var LasVegas = /** @class */ (function () {
 
     */
     LasVegas.prototype.setupNotifications = function () {
+        var _this = this;
         console.log('notifications subscriptions setup');
-        // TODO: here, associate your game notifications with local methods
-        // Example 1: standard notification handling
-        dojo.subscribe('newTurn', this, "notif_newTurn");
-        dojo.subscribe('dicesPlayed', this, "notif_dicesPlayed");
-        dojo.subscribe('removeDuplicates', this, "notif_removeDuplicates");
-        dojo.subscribe('collectBanknotes', this, "notif_collectBanknotes");
-        // Example 2: standard notification handling + tell the user interface to wait
-        //            during 3 seconds after calling the method in order to let the players
-        //            see what is happening in the game.
-        //dojo.subscribe( 'banknotesPlaced', this, "notif_banknotesPlaced" );
-        //(this as any).notifqueue.setSynchronous( 'banknotesPlaced', 3000 );
-        //
-        //(this as any).notifqueue.setSynchronous( 'finalScore', 1500 );
-        // TODO use asynchronous
+        var notifs = [
+            ['newTurn', 1],
+            ['dicesPlayed', 1],
+            ['removeDuplicates', 500],
+            ['collectBanknote', 500],
+            ['removeBanknote', 500],
+            ['removeDices', 500],
+        ];
+        notifs.forEach(function (notif) {
+            dojo.subscribe(notif[0], _this, "notif_" + notif[0]);
+            _this.notifqueue.setSynchronous(notif[0], notif[1]);
+        });
     };
-    LasVegas.prototype.notif_newTurn = function (a, b) {
-        console.log(a, b);
+    LasVegas.prototype.notif_newTurn = function (notif) {
+        console.log('notif_newTurn', notif.args);
+        var firstPlayerToken = document.getElementById('firstPlayerToken');
+        if (firstPlayerToken) {
+            var animation = this.slideToObject(firstPlayerToken, "player_board_" + notif.args.playerId);
+            dojo.connect(animation, 'onEnd', dojo.hitch(this, function () {
+                firstPlayerToken.style.top = 'unset';
+                firstPlayerToken.style.left = 'unset';
+                firstPlayerToken.style.position = 'unset';
+                firstPlayerToken.style.zIndex = 'unset';
+                document.getElementById("player_board_" + notif.args.playerId).appendChild(firstPlayerToken);
+            }));
+            animation.play();
+        }
+        else {
+            dojo.place('<div id="firstPlayerToken">FP</div>', "player_board_" + notif.args.playerId);
+        }
     };
-    LasVegas.prototype.notif_dicesPlayed = function (a, b) {
-        console.log(a, b);
+    LasVegas.prototype.notif_dicesPlayed = function (notif) {
+        console.log('notif_dicesPlayed', notif.args);
+        this.moveDicesToCasino(notif.args.casino, notif.args.playerId);
     };
-    LasVegas.prototype.notif_removeDuplicates = function (a, b) {
-        console.log(a, b);
+    LasVegas.prototype.notif_removeDuplicates = function (notif) {
+        console.log('notif_removeDuplicates', notif.args.duplicates);
     };
-    LasVegas.prototype.notif_collectBanknotes = function (a, b) {
-        console.log(a, b);
+    LasVegas.prototype.notif_collectBanknote = function (notif) {
+        console.log('notif_collectBanknote', notif.args);
+        this.casinos[notif.args.casino].slideBanknoteTo(notif.args.id, notif.args.playerId);
+        this.scoreCtrl[notif.args.playerId].incValue(notif.args.value * 10000);
+    };
+    LasVegas.prototype.notif_removeBanknote = function (notif) {
+        console.log('notif_removeBanknote', notif.args);
+    };
+    LasVegas.prototype.notif_removeDices = function (notif) {
+        console.log('notif_removeDices', notif.args);
+        this.casinos[notif.args.casino].removeDices();
     };
     return LasVegas;
 }());
