@@ -73,8 +73,7 @@ var LasVegas = /** @class */ (function () {
         console.log(gamedatas);
         this.gamedatas = gamedatas;
         Object.values(this.gamedatas.players).forEach(function (player) {
-            console.log(player, player.dices);
-            dojo.place("<div class=\"dice-counters\">\n                <div class=\"dice-counter\">\n                    " + _this.createDiceHtml(1, player.id, player.color) + " : <span id=\"dice-counter-" + player.id + "\"></span>\n                </div>\n            </div>", "player_board_" + player.id);
+            dojo.place("<div class=\"dice-counters\">\n                <div class=\"dice-counter\">\n                    " + _this.createDiceHtml(5, player.id, player.color) + " <span id=\"dice-counter-" + player.id + "\"></span>\n                </div>\n            </div>", "player_board_" + player.id);
             var counter = new ebg.counter();
             counter.create("dice-counter-" + player.id);
             counter.setValue(player.dices);

@@ -93,12 +93,15 @@
 }
 .dice-counters .dice-counter {
   flex: 1;
+  display: flex;
+  align-items: center;
 }
 .dice-counters .dice-counter .dice {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   margin: unset;
-  border-radius: 2px;
+  margin-right: 8px;
+  border-radius: 3px;
   box-shadow: unset;
 }
 

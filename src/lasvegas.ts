@@ -38,10 +38,9 @@ class LasVegas implements LasVegasGame {
         this.gamedatas = gamedatas;
 
         Object.values(this.gamedatas.players).forEach(player => {
-            console.log(player, (player as any).dices);
             dojo.place( `<div class="dice-counters">
                 <div class="dice-counter">
-                    ${this.createDiceHtml(1, player.id, player.color)} : <span id="dice-counter-${player.id}"></span>
+                    ${this.createDiceHtml(5, player.id, player.color)} <span id="dice-counter-${player.id}"></span>
                 </div>
             </div>`, `player_board_${player.id}` );
 
