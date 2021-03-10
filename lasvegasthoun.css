@@ -87,6 +87,21 @@
   cursor: pointer;
 }
 
+.dice-counters {
+  display: flex;
+  padding: 5px;
+}
+.dice-counters .dice-counter {
+  flex: 1;
+}
+.dice-counters .dice-counter .dice {
+  width: 12px;
+  height: 12px;
+  margin: unset;
+  border-radius: 2px;
+  box-shadow: unset;
+}
+
 #firstPlayerToken {
   display: inline-block;
   position: relative;

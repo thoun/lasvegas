@@ -41,7 +41,7 @@ class LasVegasThoun extends Table
         parent::__construct();
         
         self::initGameStateLabels( array( 
-            "player_number" => 10,
+            "player_count" => 10,
             "round_number" => 11
         ) );  
         
@@ -86,8 +86,8 @@ class LasVegasThoun extends Table
         
         /************ Start the game initialization *****/
         // Init global values with their initial values
-        self::setGameStateInitialValue( 'player_number', count($players) );
-        // round number, zero-indexed. when round_number == player_number, game is over
+        self::setGameStateInitialValue( 'player_count', count($players) );
+        // round number, zero-indexed. when round_number == player_count, game is over
         self::setGameStateInitialValue( 'round_number', 0 );
         
         // Init game statistics
@@ -138,6 +138,10 @@ class LasVegasThoun extends Table
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
         $sql = "SELECT player_id id, player_score score FROM player ORDER BY player_no ASC ";
         $result['players'] = self::getCollectionFromDb( $sql );
+
+        foreach($result['players'] as $id => $player) {
+            $result['players'][$id]['dices'] = intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `placed` = false and `player_id` = " . $player['id'] ));
+        }
   
         // TODO: Gather all information about current game situation (visible by player $current_player_id).
         $playersDb = $result['players'];
@@ -176,7 +180,7 @@ class LasVegasThoun extends Table
         (see states.inc.php)
     */
     function getGameProgression() {
-		$players_nbr = self::getGameStateValue("player_number");
+		$players_nbr = self::getGameStateValue("player_count");
         $roundPercent = 100 / $players_nbr;
 
         $placedDices = 0;
@@ -301,7 +305,8 @@ class LasVegasThoun extends Table
         self::notifyAllPlayers('dicesPlayed', clienttranslate('${player_name} placed diced to casino ${casino}'), array(
             'casino' => intval($casino),
             'playerId' => $player_id,
-            'player_name' => self::getActivePlayerName()
+            'player_name' => self::getActivePlayerName(),
+            'remainingDices' => intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `placed` = false and `player_id` = ".$player_id ))
         ));
 
         $this->gamestate->nextState('chooseCasino');
@@ -391,7 +396,7 @@ class LasVegasThoun extends Table
         $dicesToPlace = intval(self::getUniqueValueFromDB( $sql ));
         //self::debug('[GBA] $dicesToPlace='.$dicesToPlace);
 
-        if ($dicesToPlace /*== 0 TODO TEMP*/ <= 10) {
+        if ($dicesToPlace == 0) {
             $this->gamestate->nextState('collectBills');
         } else {
             $protection = 0;
@@ -430,12 +435,14 @@ class LasVegasThoun extends Table
         $round_number = self::getGameStateValue("round_number") + 1;
         self::setGameStateValue("round_number", $round_number);
 
-        $endGame = $round_number == self::getGameStateValue("player_number");
+        $endGame = $round_number == self::getGameStateValue("player_count");
 
         for ($i = 1; $i <= 6; $i++) {
             $this->sendCollectNotifsForCasino($i);
         }        
-        self::notifyAllPlayers('removeDices', clienttranslate('dices are removed from casinos'), array());
+        self::notifyAllPlayers('removeDices', clienttranslate('dices are removed from casinos'), array(
+            'resetDicesNumber' => DICES_PER_PLAYER
+        ));
 
         $this->gamestate->nextState($endGame ? 'endGame' : 'placeBills' );
     }

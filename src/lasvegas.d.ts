@@ -46,6 +46,7 @@ interface NotifNewTurnArgs {
 interface NotifDicesPlayedArgs {
     casino: number;
     playerId: number;
+    remainingDices: number;
 }
 
 interface NotifRemoveDuplicatesArgs {
@@ -64,4 +65,7 @@ interface NotifCollectBanknoteArgs {
 interface NotifRemoveBanknoteArgs {
     casino: number;
     id: number;
+}
+interface NotifRemoveDicesArgs {
+    resetDicesNumber: number;
 }

@@ -7,69 +7,12 @@ declare const g_gamethemeurl;
 
 declare const board: HTMLDivElement;
 
-class Casino {
-    public selectable: boolean = false;
-    private stock: Stock;
-    private banknotes: Banknote[];
-
-    constructor(private game: LasVegasGame, public casino: number, public gamedatas: CasinoGamedatas) {
-        this.banknotes = gamedatas.banknotes;
-    }
-
-    addHtml() {
-        dojo.place(
-            `<div id="casino_wrapper${this.casino}" class="casino_wrapper">
-                <div id="casino${this.casino}" class="casino"></div>
-                <div id="banknotes${this.casino}" class="banknotes"></div>
-            </div>`,
-            'casinos');
-        document.getElementById(`casino${this.casino}`).addEventListener('click', () => this.onSelection());
-
-        this.stock = new ebg.stock();
-        this.stock.create( this.game, $(`banknotes${this.casino}`), 350, 165 );
-        this.stock.centerItems = true;
-        this.stock.image_items_per_row = 1;
-        this.stock.setSelectionMode(0);
-        for(let value=1; value<=9; value++) {
-            this.stock.addItemType( value, 10 - value, `${g_gamethemeurl}img/banknotes.jpg`, value-1 );
-        }
-        this.banknotes.forEach(banknote => this.stock.addToStockWithId( banknote.value, `${banknote.id}`, 'topbar'));
-
-        console.log(this.banknotes, this.stock.items);
-    }
-
-    setSelectable(selectable: boolean) {
-        this.selectable = selectable;
-        dojo.toggleClass(`casino${this.casino}`, 'selectable', selectable);
-    }
-
-    onSelection() {
-        if (this.selectable) {
-            this.game.casinoSelected(this.casino);
-        }
-    }
-
-    slideBanknoteTo(banknoteId: number, playerId: number) {
-        this.stock.removeFromStockById(`${banknoteId}`, `overall_player_board_${playerId}`);
-    }
-
-    removeBanknote(banknoteId: number) {
-        this.stock.removeFromStockById(`${banknoteId}`);
-    }
-
-    removeDices(playerId?: number) {
-        let elements = Array.from(document.getElementById(`casino${this.casino}`).getElementsByClassName(`dice`));
-        if (playerId) {
-            elements = elements.filter((element: HTMLDivElement) => parseInt(element.dataset.playerId) === playerId);
-        }
-        elements.forEach((element: HTMLDivElement) => (this.game as any).fadeOutAndDestroy(element));
-    }
-}
-
+const END_TURN_ANIMATIONS_DURATION = 1000;
 
 class LasVegas implements LasVegasGame {
     private gamedatas: LasVegasGamedatas;
     private casinos: Casino[] = [];
+    private dicesCounters: Counter[] = [];
 
     constructor() {
     }
@@ -93,6 +36,20 @@ class LasVegas implements LasVegasGame {
         
         console.log(gamedatas);
         this.gamedatas = gamedatas;
+
+        Object.values(this.gamedatas.players).forEach(player => {
+            console.log(player, (player as any).dices);
+            dojo.place( `<div class="dice-counters">
+                <div class="dice-counter">
+                    ${this.createDiceHtml(1, player.id, player.color)} : <span id="dice-counter-${player.id}"></span>
+                </div>
+            </div>`, `player_board_${player.id}` );
+
+            const counter = new ebg.counter();
+            counter.create(`dice-counter-${player.id}`);
+            counter.setValue((player as any).dices);
+            this.dicesCounters[player.id] = counter;
+        });
 
         for (let i=1; i<=6; i++) {
             const casino = new Casino(this, i, gamedatas.casinos[i]);
@@ -291,10 +248,10 @@ class LasVegas implements LasVegasGame {
             const notifs = [
                 ['newTurn', 1],
                 ['dicesPlayed', 1],
-                ['removeDuplicates', 500],
-                ['collectBanknote', 500],
-                ['removeBanknote', 500],
-                ['removeDices', 500],
+                ['removeDuplicates', END_TURN_ANIMATIONS_DURATION],
+                ['collectBanknote', END_TURN_ANIMATIONS_DURATION],
+                ['removeBanknote', END_TURN_ANIMATIONS_DURATION],
+                ['removeDices', END_TURN_ANIMATIONS_DURATION],
             ];
         
             notifs.forEach((notif) => {
@@ -309,6 +266,7 @@ class LasVegas implements LasVegasGame {
 
         notif_dicesPlayed(notif: Notif<NotifDicesPlayedArgs>) {
             this.moveDicesToCasino(notif.args.casino, notif.args.playerId);
+            this.dicesCounters[notif.args.playerId].toValue(notif.args.remainingDices);
         }
 
         notif_removeDuplicates(notif: Notif<NotifRemoveDuplicatesArgs>) {
@@ -320,7 +278,7 @@ class LasVegas implements LasVegasGame {
             const points = notif.args.value * 10000;
             (this as any).scoreCtrl[notif.args.playerId].incValue(points);
 
-            (this as any).displayScoring( `banknotes${notif.args.casino}`, this.gamedatas.players[notif.args.playerId].color, points, 500);
+            (this as any).displayScoring( `banknotes${notif.args.casino}`, this.gamedatas.players[notif.args.playerId].color, points, END_TURN_ANIMATIONS_DURATION);
             this.casinos[notif.args.casino].removeDices(notif.args.playerId);
         }
 
@@ -328,8 +286,9 @@ class LasVegas implements LasVegasGame {
             this.casinos[notif.args.casino].removeBanknote(notif.args.id);
         }
 
-        notif_removeDices(notif: Notif<void>) {
+        notif_removeDices(notif: Notif<NotifRemoveDicesArgs>) {
             this.casinos.forEach(casino => casino.removeDices());
+            this.dicesCounters.forEach(dicesCounter => dicesCounter.setValue(notif.args.resetDicesNumber));
         }
 
 }

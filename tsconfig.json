@@ -9,8 +9,10 @@
     },
     "files": [
         "src/framework.d.ts",
+        "src/counter.d.ts",
         "src/stock.d.ts",
         "src/lasvegas.d.ts",
+        "src/casino.ts",
         "src/lasvegas.ts",
         "src/define.ts"
     ]

@@ -71,6 +71,23 @@
     }
 }
 
+.dice-counters {
+    display: flex;
+    padding: 5px;
+
+    .dice-counter {
+        flex: 1;
+
+        .dice {
+            width: 12px;
+            height: 12px;
+            margin: unset;
+            border-radius: 2px;
+            box-shadow: unset;
+        }
+    }
+}
+
 #firstPlayerToken {
     display: inline-block;
     position: relative;
