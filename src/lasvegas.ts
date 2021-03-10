@@ -262,6 +262,7 @@ class LasVegas implements LasVegasGame {
 
         notif_newTurn(notif: Notif<NotifNewTurnArgs>) {
             this.placeFirstPlayerToken(notif.args.playerId);
+            this.casinos.forEach(casino => casino.setNewBanknotes(notif.args.casinos[casino.casino]));
         }
 
         notif_dicesPlayed(notif: Notif<NotifDicesPlayedArgs>) {

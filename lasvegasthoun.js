@@ -6,6 +6,10 @@ var Casino = /** @class */ (function () {
         this.selectable = false;
         this.banknotes = gamedatas.banknotes;
     }
+    Casino.prototype.setNewBanknotes = function (banknotes) {
+        var _this = this;
+        banknotes.forEach(function (banknote) { return _this.stock.addToStockWithId(banknote.value, "" + banknote.id, 'topbar'); });
+    };
     Casino.prototype.addHtml = function () {
         var _this = this;
         dojo.place("<div id=\"casino_wrapper" + this.casino + "\" class=\"casino_wrapper\">\n                <div id=\"casino" + this.casino + "\" class=\"casino\"></div>\n                <div id=\"banknotes" + this.casino + "\" class=\"banknotes\"></div>\n            </div>", 'casinos');
@@ -18,7 +22,7 @@ var Casino = /** @class */ (function () {
         for (var value = 1; value <= 9; value++) {
             this.stock.addItemType(value, 10 - value, g_gamethemeurl + "img/banknotes.jpg", value - 1);
         }
-        this.banknotes.forEach(function (banknote) { return _this.stock.addToStockWithId(banknote.value, "" + banknote.id, 'topbar'); });
+        this.setNewBanknotes(this.banknotes);
     };
     Casino.prototype.setSelectable = function (selectable) {
         this.selectable = selectable;
@@ -259,6 +263,7 @@ var LasVegas = /** @class */ (function () {
     };
     LasVegas.prototype.notif_newTurn = function (notif) {
         this.placeFirstPlayerToken(notif.args.playerId);
+        this.casinos.forEach(function (casino) { return casino.setNewBanknotes(notif.args.casinos[casino.casino]); });
     };
     LasVegas.prototype.notif_dicesPlayed = function (notif) {
         this.moveDicesToCasino(notif.args.casino, notif.args.playerId);

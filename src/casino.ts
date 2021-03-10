@@ -7,6 +7,10 @@ class Casino {
         this.banknotes = gamedatas.banknotes;
     }
 
+    setNewBanknotes(banknotes: Banknote[]): void {
+        banknotes.forEach(banknote => this.stock.addToStockWithId( banknote.value, `${banknote.id}`, 'topbar'));
+    }
+
     addHtml() {
         dojo.place(
             `<div id="casino_wrapper${this.casino}" class="casino_wrapper">
@@ -24,7 +28,8 @@ class Casino {
         for(let value=1; value<=9; value++) {
             this.stock.addItemType( value, 10 - value, `${g_gamethemeurl}img/banknotes.jpg`, value-1 );
         }
-        this.banknotes.forEach(banknote => this.stock.addToStockWithId( banknote.value, `${banknote.id}`, 'topbar'));
+
+        this.setNewBanknotes(this.banknotes)
     }
 
     setSelectable(selectable: boolean) {
