@@ -34,7 +34,6 @@ class LasVegas implements LasVegasGame {
         
         console.log( "Starting game setup" );
         
-        console.log(gamedatas);
         this.gamedatas = gamedatas;
 
         Object.values(this.gamedatas.players).forEach(player => {

@@ -51,11 +51,14 @@
             background-position: 0px 0px;
             width: 466px;
             height: 292px;
+            padding: 50px;
             box-sizing: border-box;
             
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-wrap: wrap;
+            align-content: center;
     
             @for $i from 1 through 6 {
                 &#casino#{$i}{

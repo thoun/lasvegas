@@ -70,7 +70,6 @@ var LasVegas = /** @class */ (function () {
     LasVegas.prototype.setup = function (gamedatas) {
         var _this = this;
         console.log("Starting game setup");
-        console.log(gamedatas);
         this.gamedatas = gamedatas;
         Object.values(this.gamedatas.players).forEach(function (player) {
             dojo.place("<div class=\"dice-counters\">\n                <div class=\"dice-counter\">\n                    " + _this.createDiceHtml(5, player.id, player.color) + " <span id=\"dice-counter-" + player.id + "\"></span>\n                </div>\n            </div>", "player_board_" + player.id);
