@@ -133,8 +133,8 @@ var LasVegas = /** @class */ (function () {
                     this.casinos[i].setSelectable(true);
                 }
             }
+            dojo.addClass('dices-selector', 'selectable');
         }
-        dojo.addClass('dices-selector', 'selectable');
     };
     // onLeavingState: this method is called each time we are leaving a game state.
     //                 You can use this method to perform some user interface changes at this moment.

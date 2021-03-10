@@ -114,8 +114,8 @@ class LasVegas implements LasVegasGame {
                     this.casinos[i].setSelectable(true);
                 }
             }
+            dojo.addClass('dices-selector', 'selectable');
         }
-        dojo.addClass('dices-selector', 'selectable');
     }
     
 

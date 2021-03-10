@@ -392,7 +392,7 @@ class LasVegasThoun extends Table
         //self::debug('[GBA] $player_id='.$player_id.' active player_id='.self::getActivePlayerId());
         //self::dump('[GBA] players', $this->loadPlayersBasicInfos());
 
-        $sql = "SELECT count(*) FROM dices WHERE `placed` = false";
+        $sql = "SELECT count(*) FROM dices INNER JOIN player ON dices.player_id = player.player_id WHERE `placed` = false and player_zombie = 0";
         $dicesToPlace = intval(self::getUniqueValueFromDB( $sql ));
         //self::debug('[GBA] $dicesToPlace='.$dicesToPlace);
 
@@ -400,15 +400,15 @@ class LasVegasThoun extends Table
             $this->gamestate->nextState('collectBills');
         } else {
             $protection = 0;
-            $endForPlayer = 0;
-            while ($endForPlayer == 0
+            $dicesToPlaceForPlayer = 0;
+            while ($dicesToPlaceForPlayer == 0
             && $protection < 10 // infinite loop protection
             ) {
-                $sql = "SELECT count(*) FROM dices WHERE `placed` = false and `player_id` = ".self::getActivePlayerId();
-                $endForPlayer = intval(self::getUniqueValueFromDB( $sql )) == 0;
+                $sql = "SELECT count(*) FROM dices INNER JOIN player ON dices.player_id = player.player_id WHERE `placed` = false and player_zombie = 0 and dices.`player_id` = ".self::getActivePlayerId();
+                $dicesToPlaceForPlayer = intval(self::getUniqueValueFromDB( $sql ));
                 // if player has no dice we skip to next player
                 //self::debug('[GBA] goes on the loop');
-                if ($endForPlayer) {
+                if ($dicesToPlaceForPlayer == 0) {
                     //self::debug('[GBA] $endForPlayer true');
                     self::activeNextPlayer();
                 }
@@ -464,12 +464,16 @@ class LasVegasThoun extends Table
         you must _never_ use getCurrentPlayerId() or getCurrentPlayerName(), otherwise it will fail with a "Not logged" error message. 
     */
 
-    function zombieTurn( $state, $active_player )
-    {
+    function zombieTurn( $state, $active_player ) {
     	$statename = $state['name'];
     	
         if ($state['type'] === "activeplayer") {
             switch ($statename) {
+                case 'playerTurn':
+                    die(json_encode($active_player));
+
+
+
                 default:
                     $this->gamestate->nextState( "zombiePass" );
                 	break;
@@ -503,8 +507,7 @@ class LasVegasThoun extends Table
     
     */
     
-    function upgradeTableDb( $from_version )
-    {
+    function upgradeTableDb( $from_version ) {
         // $from_version is the current version of this game database, in numerical form.
         // For example, if the game was running with a release of your game named "140430-1345",
         // $from_version is equal to 1404301345
