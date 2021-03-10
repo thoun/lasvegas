@@ -1,28 +1,39 @@
 #dices-selector {
     text-align: center;
     min-height: 40px;
+
+    &.selectable {
+        .dice {
+            cursor: pointer;
+        }
+    }
 }
 
 .dice {
     display: inline-block;
     position: relative;
-    background-image: url('img/dices.png');
     background-position: 0px 0px;
     width: 33px;
     height: 33px;
     margin: 3px;
+    border-radius: 6px;
+    border-style: outset;
+    border-width: 1px;
+    box-shadow: 2px 2px 4px 0px rgba(0,0,0,0.5);
+
+    &.white-dot {
+        background: url('img/dices-white.png'), black;
+        background-size: auto 100%;
+    }
+    &.black-dot {
+        background: url('img/dices-black.png'), black;
+        background-size: auto 100%;
+    }
 
     @for $i from 1 through 6 {
         &.dice#{$i}{
           background-position-x: ($i - 1)/5 * 100%;
         }
-    }
-
-    .dice-overlay {
-        width: 100%;
-        height: 100%;
-        opacity: 0.6;
-        border-radius: 6px;
     }
 }
 
@@ -39,7 +50,7 @@
             background-image: url('img/casinos.png');
             background-position: 0px 0px;
             width: 466px;
-            height: 288px;
+            height: 292px;
             box-sizing: border-box;
             
             display: flex;
@@ -58,4 +69,12 @@
             }
         }
     }
+}
+
+#firstPlayerToken {
+    display: inline-block;
+    position: relative;
+    background-image: url('img/firstplayer.png');
+    width: 32px;
+    height: 32px;
 }

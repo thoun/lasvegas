@@ -357,6 +357,7 @@ class LasVegasThoun extends Table
 
     function stCollectBills() {
         $round_number = self::getGameStateValue("round_number") + 1;
+        self::setGameStateValue("round_number", $round_number);
 
         $endGame = $round_number == self::getGameStateValue("player_number");
 
@@ -392,6 +393,8 @@ class LasVegasThoun extends Table
             for ($b = 0; $b < count($dicesOnCasino) && $b < count($banknotesOnCasino); $b++) {
                 $hasBanknotes = $b < count($banknotesOnCasino);
                 $hasDices = $b < count($dicesOnCasino);
+                self::debug("[GBA] casino=$i b=$b hasBanknotes=$hasBanknotes hasDices=$hasDices");
+
                 if ($hasBanknotes && $hasDices) {
                     $playerId = $dicesOnCasino[$b]->playerId;
                     $banknote = $banknotesOnCasino[$b];

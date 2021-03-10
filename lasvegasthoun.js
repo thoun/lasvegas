@@ -11,14 +11,15 @@ var Casino = /** @class */ (function () {
         dojo.place("<div id=\"casino_wrapper" + this.casino + "\" class=\"casino_wrapper\">\n                <div id=\"casino" + this.casino + "\" class=\"casino\"></div>\n                <div id=\"banknotes" + this.casino + "\" class=\"banknotes\"></div>\n            </div>", 'casinos');
         document.getElementById("casino" + this.casino).addEventListener('click', function () { return _this.onSelection(); });
         this.stock = new ebg.stock();
-        this.stock.create(this.game, $("banknotes" + this.casino), 350, 100);
+        this.stock.create(this.game, $("banknotes" + this.casino), 350, 165);
         this.stock.centerItems = true;
         this.stock.image_items_per_row = 1;
         this.stock.setSelectionMode(0);
         for (var value = 1; value <= 9; value++) {
-            this.stock.addItemType(value, 10 - value, g_gamethemeurl + "img/banknotes.png", value - 1);
+            this.stock.addItemType(value, 10 - value, g_gamethemeurl + "img/banknotes.jpg", value - 1);
         }
         this.banknotes.forEach(function (banknote) { return _this.stock.addToStockWithId(banknote.value, "" + banknote.id, 'topbar'); });
+        console.log(this.banknotes, this.stock.items);
     };
     Casino.prototype.setSelectable = function (selectable) {
         this.selectable = selectable;
@@ -30,9 +31,11 @@ var Casino = /** @class */ (function () {
         }
     };
     Casino.prototype.slideBanknoteTo = function (banknoteId, playerId) {
+        console.log('slideBanknoteTo', banknoteId, JSON.stringify(this.stock.items, null, 2), document.getElementById("playertable-" + playerId));
         this.stock.removeFromStockById("" + banknoteId, "playertable-" + playerId);
     };
     Casino.prototype.removeBanknote = function (banknoteId) {
+        console.log('removeBanknote', banknoteId, JSON.stringify(this.stock.items, null, 2));
         this.stock.removeFromStockById("" + banknoteId);
     };
     Casino.prototype.removeDices = function () {
@@ -80,8 +83,24 @@ var LasVegas = /** @class */ (function () {
         for (var i = 1; i <= 6; i++) {
             _loop_1(i);
         }
+        document.getElementById('dices-selector').addEventListener('click', function (event) { return _this.diceSelectorClick(event); });
         this.setupNotifications();
         console.log("Ending game setup");
+        /*const colors = [
+            'ff0000',
+            '008000',
+            '0000ff',
+            'ffa500',
+            '000000',
+            'ffffff',
+            'e94190',
+            '982fff',
+            '72c3b1',
+            'f07f16',
+            'bdd002',
+            '7b7b7b'
+        ];
+        colors.forEach(color => dojo.place(this.createDiceHtml(5, color), `dices-test`));*/
     };
     ///////////////////////////////////////////////////
     //// Game & client states
@@ -105,6 +124,7 @@ var LasVegas = /** @class */ (function () {
                 }
             }
         }
+        dojo.addClass('dices-selector', 'selectable');
     };
     // onLeavingState: this method is called each time we are leaving a game state.
     //                 You can use this method to perform some user interface changes at this moment.
@@ -119,6 +139,7 @@ var LasVegas = /** @class */ (function () {
     LasVegas.prototype.onLeavingPlayerTurn = function () {
         //this.setTableDices();
         this.casinos.forEach(function (casino) { return casino.setSelectable(false); });
+        dojo.removeClass('dices-selector', 'selectable');
     };
     // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
     //                        action status bar (ie: the HTML links in the status bar).
@@ -151,7 +172,8 @@ var LasVegas = /** @class */ (function () {
         });
     };
     LasVegas.prototype.createDiceHtml = function (number, color) {
-        return "<div class=\"dice dice" + number + "\"><div class=\"dice-overlay\" style=\"background: #" + color + "\"></div></div>";
+        var blackDot = [parseInt(color.substr(0, 2), 16), parseInt(color.substr(2, 2), 16), parseInt(color.substr(4, 2), 16)].reduce(function (a, b) { return a + b; }) > 460;
+        return "<div class=\"dice dice" + number + " " + (blackDot ? 'black-dot' : 'white-dot') + "\" style=\"background-color: #" + color + "; border-color: #" + color + ";\"></div>";
     };
     LasVegas.prototype.moveDicesToCasino = function (casino, playerId) {
         var _this = this;
@@ -171,6 +193,14 @@ var LasVegas = /** @class */ (function () {
             //(this as any).slideToObjectAndDestroy(element, `overall_player_board_${playerId}`);
             _this.fadeOutAndDestroy(element);
         });
+    };
+    LasVegas.prototype.diceSelectorClick = function (event) {
+        var _a, _b, _c;
+        var numberMatch = (_c = (_b = (_a = event.target) === null || _a === void 0 ? void 0 : _a.classList) === null || _b === void 0 ? void 0 : _b.value) === null || _c === void 0 ? void 0 : _c.match(/\d/);
+        if (numberMatch) {
+            var number = parseInt(numberMatch[0]);
+            this.casinos[number].onSelection();
+        }
     };
     ///////////////////////////////////////////////////
     //// Reaction to cometD notifications
