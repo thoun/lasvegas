@@ -50,10 +50,25 @@ var Casino = /** @class */ (function () {
     return Casino;
 }());
 var END_TURN_ANIMATIONS_DURATION = 1000;
+var COLORS = [
+    'ffffff',
+    '000000',
+    'ff0000',
+    '008000',
+    '0000ff',
+    'ffa500',
+    'e94190',
+    '982fff',
+    '72c3b1',
+    'f07f16',
+    'bdd002',
+    '7b7b7b'
+];
 var LasVegas = /** @class */ (function () {
     function LasVegas() {
         this.casinos = [];
         this.dicesCounters = [];
+        this.dicesCountersNeutral = [];
     }
     /*
         setup:
@@ -71,12 +86,25 @@ var LasVegas = /** @class */ (function () {
         var _this = this;
         console.log("Starting game setup");
         this.gamedatas = gamedatas;
+        this.neutralColor = COLORS.find(function (color) { return !Object.values(_this.gamedatas.players).some(function (player) { return player.color === color; }); });
         Object.values(this.gamedatas.players).forEach(function (player) {
-            dojo.place("<div class=\"dice-counters\">\n                <div class=\"dice-counter\">\n                    " + _this.createDiceHtml(5, player.id, player.color) + " <span id=\"dice-counter-" + player.id + "\"></span>\n                </div>\n            </div>", "player_board_" + player.id);
+            var html = "<div class=\"dice-counters\"><div class=\"dice-counter\">" + _this.createDiceHtml(5, player.id, player.color) + " <span id=\"dice-counter-" + player.id + "\"></span>";
+            if (_this.isVariant()) {
+                html += _this.createDiceHtml(5, player.id, _this.neutralColor) + " <span id=\"dice-counter-" + player.id + "-neutral\"></span>";
+            }
+            html += "</div></div>";
+            dojo.place(html, "player_board_" + player.id);
+            var dices = player.dices;
             var counter = new ebg.counter();
             counter.create("dice-counter-" + player.id);
-            counter.setValue(player.dices);
+            counter.setValue(dices.player);
             _this.dicesCounters[player.id] = counter;
+            if (_this.isVariant()) {
+                var counter_1 = new ebg.counter();
+                counter_1.create("dice-counter-" + player.id + "-neutral");
+                counter_1.setValue(dices.neutral);
+                _this.dicesCountersNeutral[player.id] = counter_1;
+            }
         });
         var _loop_1 = function (i) {
             var casino = new Casino(this_1, i, gamedatas.casinos[i]);
@@ -85,8 +113,13 @@ var LasVegas = /** @class */ (function () {
             Object.entries(gamedatas.casinos[i].dices).forEach(function (_a) {
                 var playerId = _a[0], dices = _a[1];
                 var color = _this.gamedatas.players[playerId].color;
-                for (var j = 0; j < dices; j++) {
+                for (var j = 0; j < dices.player; j++) {
                     dojo.place(_this.createDiceHtml(i, playerId, color), "casino" + i);
+                }
+            });
+            Object.values(gamedatas.casinos[i].dices).forEach(function (dices) {
+                for (var j = 0; j < dices.neutral; j++) {
+                    dojo.place(_this.createDiceHtml(i, 0, _this.neutralColor), "casino" + i);
                 }
             });
         };
@@ -98,21 +131,7 @@ var LasVegas = /** @class */ (function () {
         document.getElementById('dices-selector').addEventListener('click', function (event) { return _this.diceSelectorClick(event); });
         this.setupNotifications();
         console.log("Ending game setup");
-        /*const colors = [
-            'ff0000',
-            '008000',
-            '0000ff',
-            'ffa500',
-            '000000',
-            'ffffff',
-            'e94190',
-            '982fff',
-            '72c3b1',
-            'f07f16',
-            'bdd002',
-            '7b7b7b'
-        ];
-        colors.forEach(color => dojo.place(this.createDiceHtml(5, color), `dices-test`));*/
+        //colors.forEach(color => dojo.place(this.createDiceHtml(5, color), `dices-test`));
     };
     ///////////////////////////////////////////////////
     //// Game & client states
@@ -131,7 +150,7 @@ var LasVegas = /** @class */ (function () {
         this.setTableDices(args.dices);
         if (this.isCurrentPlayerActive()) {
             for (var i = 1; i <= 6; i++) {
-                if (this.isCurrentPlayerActive() && args.dices.includes(i)) {
+                if (this.isCurrentPlayerActive() && (args.dices.player.includes(i) || args.dices.neutral.includes(i))) {
                     this.casinos[i].setSelectable(true);
                 }
             }
@@ -149,7 +168,6 @@ var LasVegas = /** @class */ (function () {
         }
     };
     LasVegas.prototype.onLeavingPlayerTurn = function () {
-        //this.setTableDices();
         this.casinos.forEach(function (casino) { return casino.setSelectable(false); });
         dojo.removeClass('dices-selector', 'selectable');
     };
@@ -161,6 +179,9 @@ var LasVegas = /** @class */ (function () {
     ///////////////////////////////////////////////////
     //// Utility methods
     ///////////////////////////////////////////////////
+    LasVegas.prototype.isVariant = function () {
+        return this.gamedatas.variant;
+    };
     LasVegas.prototype.takeAction = function (action, data) {
         data = data || {};
         data.lock = true;
@@ -171,9 +192,17 @@ var LasVegas = /** @class */ (function () {
         var playerId = this.getActivePlayerId();
         var color = this.gamedatas.players[playerId].color;
         $('dices-selector').innerHTML = '';
-        dices === null || dices === void 0 ? void 0 : dices.forEach(function (dice) {
-            dojo.place(_this.createDiceHtml(dice, playerId, color), 'dices-selector');
-        });
+        var _loop_2 = function (i) {
+            dices.player.filter(function (dice) { return dice == i; }).forEach(function (dice) {
+                dojo.place(_this.createDiceHtml(dice, playerId, color), 'dices-selector');
+            });
+            dices.neutral.filter(function (dice) { return dice == i; }).forEach(function (dice) {
+                dojo.place(_this.createDiceHtml(dice, 0, _this.neutralColor), 'dices-selector');
+            });
+        };
+        for (var i = 1; i <= 6; i++) {
+            _loop_2(i);
+        }
     };
     LasVegas.prototype.casinoSelected = function (casino) {
         if (!this.checkAction('chooseCasino')) {
@@ -260,12 +289,17 @@ var LasVegas = /** @class */ (function () {
         });
     };
     LasVegas.prototype.notif_newTurn = function (notif) {
+        var _this = this;
         this.placeFirstPlayerToken(notif.args.playerId);
         this.casinos.forEach(function (casino) { return casino.setNewBanknotes(notif.args.casinos[casino.casino]); });
+        notif.args.neutralDices.forEach(function (neutralDice) { return dojo.place(_this.createDiceHtml(neutralDice, 0, _this.neutralColor), "casino" + neutralDice); });
     };
     LasVegas.prototype.notif_dicesPlayed = function (notif) {
         this.moveDicesToCasino(notif.args.casino, notif.args.playerId);
-        this.dicesCounters[notif.args.playerId].toValue(notif.args.remainingDices);
+        this.dicesCounters[notif.args.playerId].toValue(notif.args.remainingDices.player);
+        if (this.isVariant()) {
+            this.dicesCountersNeutral[notif.args.playerId].toValue(notif.args.remainingDices.neutral);
+        }
     };
     LasVegas.prototype.notif_removeDuplicates = function (notif) {
         var _this = this;

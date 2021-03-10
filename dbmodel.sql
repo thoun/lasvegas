@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS `dices` (
   `value` TINYINT(1) unsigned NOT NULL,
   `placed` TINYINT(1) unsigned NOT NULL DEFAULT false,
   `player_id` INT(10) unsigned NOT NULL,
+  `neutral` TINYINT(1) unsigned NOT NULL DEFAULT false,
   PRIMARY KEY (`dice_id`)
 ) ENGINE=InnoDB;
 

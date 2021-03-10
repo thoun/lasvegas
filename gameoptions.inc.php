@@ -24,33 +24,35 @@
  *
  */
 
+$condition = array(
+    1 => array(),
+    2 => array(
+        array(
+            'type' => 'maxplayers',
+            'value' => 4,
+            'message' => totranslate('Variant is limited to 4 players')
+        )
+    )
+);
+
 $game_options = array(
-
-    /*
-    
-    // note: game variant ID should start at 100 (ie: 100, 101, 102, ...). The maximum is 199.
     100 => array(
-                'name' => totranslate('my game option'),    
-                'values' => array(
-
-                            // A simple value for this option:
-                            1 => array( 'name' => totranslate('option 1') )
-
-                            // A simple value for this option.
-                            // If this value is chosen, the value of "tmdisplay" is displayed in the game lobby
-                            2 => array( 'name' => totranslate('option 2'), 'tmdisplay' => totranslate('option 2') ),
-
-                            // Another value, with other options:
-                            //  description => this text will be displayed underneath the option when this value is selected to explain what it does
-                            //  beta=true => this option is in beta version right now (there will be a warning)
-                            //  alpha=true => this option is in alpha version right now (there will be a warning, and starting the game will be allowed only in training mode except for the developer)
-                            //  nobeginner=true  =>  this option is not recommended for beginners
-                            3 => array( 'name' => totranslate('option 3'), 'description' => totranslate('this option does X'), 'beta' => true, 'nobeginner' => true )
-                        ),
-                'default' => 1
+        'name' => totranslate('Variant (neutral player addition)'),
+        'values' => array(
+            1 => array(
+                'name' => totranslate('No'), 
+                'description' => totranslate('Standard rules')
             ),
-
-    */
+            2 => array(
+                'name' => totranslate('Yes'), 
+                'description' => totranslate('Neutral player is added'), 
+                'tmdisplay' => totranslate('Neutral player variant'),
+                'nobeginner' => true 
+            )
+        ),
+        'displaycondition' => $condition,
+        'startcondition' => $condition
+    )
 
 );
 

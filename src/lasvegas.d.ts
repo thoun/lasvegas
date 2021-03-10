@@ -2,7 +2,16 @@
  * Your game interfaces
  */
 
- interface Banknote {
+interface Dices {
+    player: number[];
+    neutral: number[];
+}
+interface DicesCount {
+    player: number;
+    neutral: number;
+}
+
+interface Banknote {
     id: number;
     location: string;
     location_arg: number;
@@ -10,7 +19,7 @@
 }
 interface CasinoGamedatas {
     banknotes: Banknote[];
-    dices: { [playerId: number]: number };
+    dices: { [playerId: number]: DicesCount };
 }
 
 interface LasVegasGamedatas {
@@ -26,6 +35,7 @@ interface LasVegasGamedatas {
     tablespeed: string;
 
     // Add here variables you set up in getAllDatas
+    variant: boolean;
     casinos: CasinoGamedatas[];
     firstPlayerId: number;
 }
@@ -35,18 +45,19 @@ interface LasVegasGame extends Game {
 }
 
 interface EnteringPlayerTurnArgs {
-    dices: number[];
+    dices: Dices;
 }
 
 interface NotifNewTurnArgs {
     casinos: any;
     playerId: number;
+    neutralDices: number[];
 }
 
 interface NotifDicesPlayedArgs {
     casino: number;
     playerId: number;
-    remainingDices: number;
+    remainingDices: DicesCount;
 }
 
 interface NotifRemoveDuplicatesArgs {
