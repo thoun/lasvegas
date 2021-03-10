@@ -320,7 +320,10 @@ class LasVegas implements LasVegasGame {
 
         notif_removeDices(notif: Notif<NotifRemoveDicesArgs>) {
             this.casinos.forEach(casino => casino.removeDices());
-            this.dicesCounters.forEach(dicesCounter => dicesCounter.setValue(notif.args.resetDicesNumber));
+            this.dicesCounters.forEach(dicesCounter => dicesCounter.setValue(notif.args.resetDicesNumber.player));
+            if (this.isVariant()) {
+                this.dicesCountersNeutral.forEach(dicesCounter => dicesCounter.setValue(notif.args.resetDicesNumber.neutral));
+            }
         }
 
 }

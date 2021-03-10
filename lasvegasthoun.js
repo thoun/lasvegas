@@ -317,7 +317,10 @@ var LasVegas = /** @class */ (function () {
     };
     LasVegas.prototype.notif_removeDices = function (notif) {
         this.casinos.forEach(function (casino) { return casino.removeDices(); });
-        this.dicesCounters.forEach(function (dicesCounter) { return dicesCounter.setValue(notif.args.resetDicesNumber); });
+        this.dicesCounters.forEach(function (dicesCounter) { return dicesCounter.setValue(notif.args.resetDicesNumber.player); });
+        if (this.isVariant()) {
+            this.dicesCountersNeutral.forEach(function (dicesCounter) { return dicesCounter.setValue(notif.args.resetDicesNumber.neutral); });
+        }
     };
     return LasVegas;
 }());

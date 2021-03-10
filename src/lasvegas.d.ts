@@ -78,5 +78,5 @@ interface NotifRemoveBanknoteArgs {
     id: number;
 }
 interface NotifRemoveDicesArgs {
-    resetDicesNumber: number;
+    resetDicesNumber: DicesCount;
 }

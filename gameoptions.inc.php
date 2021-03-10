@@ -37,7 +37,7 @@ $condition = array(
 
 $game_options = array(
     100 => array(
-        'name' => totranslate('Variant (neutral player addition)'),
+        'name' => totranslate('Neutral player variant'),
         'values' => array(
             1 => array(
                 'name' => totranslate('No'), 

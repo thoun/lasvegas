@@ -158,8 +158,8 @@ class LasVegasThoun extends Table
 
         foreach($result['players'] as $id => $player) {
             $result['players'][$id]['dices'] = new Dices(
-                intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `placed` = false and `neutral` = true and `player_id` = " . $player['id'] )),
-                intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `placed` = false and `neutral` = false and `player_id` = " . $player['id'] ))
+                intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `placed` = false and `neutral` = false and `player_id` = " . $player['id'] )),
+                intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `placed` = false and `neutral` = true and `player_id` = " . $player['id'] ))
             );
         }
   
@@ -505,9 +505,16 @@ class LasVegasThoun extends Table
 
         for ($i = 1; $i <= 6; $i++) {
             $this->sendCollectNotifsForCasino($i);
-        }        
+        }
+        $neutralDices = 0;
+        if ($this->isVariant()) {
+            $neutralDices = $this->getPlayerCount() == 2 ? 4 : 2;
+        }
         self::notifyAllPlayers('removeDices', clienttranslate('Remaining dices are removed from casinos'), array(
-            'resetDicesNumber' => DICES_PER_PLAYER
+            'resetDicesNumber' => new Dices(
+                DICES_PER_PLAYER,
+                $neutralDices
+            )
         ));
 
         $this->gamestate->nextState($endGame ? 'endGame' : 'placeBills' );
