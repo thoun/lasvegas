@@ -27,6 +27,7 @@ interface LasVegasGamedatas {
 
     // Add here variables you set up in getAllDatas
     casinos: CasinoGamedatas[];
+    firstPlayerId: number;
 }
 
 interface LasVegasGame extends Game {
@@ -48,7 +49,9 @@ interface NotifDicesPlayedArgs {
 }
 
 interface NotifRemoveDuplicatesArgs {
-    duplicates: number[];
+    casino: number;
+    duplicatesValues: number[];
+    playersId: number[];
 }
 
 interface NotifCollectBanknoteArgs {
@@ -61,8 +64,4 @@ interface NotifCollectBanknoteArgs {
 interface NotifRemoveBanknoteArgs {
     casino: number;
     id: number;
-}
-
-interface NotifRemoveDicesArgs {
-    casino: number;
 }

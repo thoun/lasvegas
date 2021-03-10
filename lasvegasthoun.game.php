@@ -131,16 +131,18 @@ class LasVegasThoun extends Table
         _ when the game starts
         _ when a player refreshes the game page (F5)
     */
-    protected function getAllDatas()
-    {
+    protected function getAllDatas() {
         $result = array();
     
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-        $sql = "SELECT player_id id, player_score score FROM player ";
+        $sql = "SELECT player_id id, player_score score FROM player ORDER BY player_no ASC ";
         $result['players'] = self::getCollectionFromDb( $sql );
   
         // TODO: Gather all information about current game situation (visible by player $current_player_id).
+        $playersDb = $result['players'];
+
+        $result['firstPlayerId'] = intval(array_keys($playersDb)[self::getGameStateValue("round_number")]);
 
         $dices = $this->getDices(null, true);
 
@@ -152,7 +154,7 @@ class LasVegasThoun extends Table
             $casino->banknotes = $bankNotes;
 
             $casinoDices = array();
-            foreach( $result['players'] as $player ) {
+            foreach( $playersDb as $player ) {
                 $player_id = intval($player['id']);
                 $casinoDices[$player_id] = count(array_filter($dices, function($dice) use ($player_id, $i) { return $dice->player_id == $player_id && $dice->value == $i; }));
             }
@@ -173,8 +175,7 @@ class LasVegasThoun extends Table
         This method is called each time we are in a game state with the "updateGameProgression" property set to true 
         (see states.inc.php)
     */
-    function getGameProgression()
-    {
+    function getGameProgression() {
 		$players_nbr = self::getGameStateValue("player_number");
         $roundPercent = 100 / $players_nbr;
 
@@ -211,6 +212,76 @@ class LasVegasThoun extends Table
     function getPlayerName($playerId) {
         return self::getUniqueValueFromDb( "SELECT player_name FROM player WHERE player_id = $playerId" );
     }
+
+    function sendCollectNotifsForCasino($casino) {
+
+        $dicesOnCasino = array_values($this->getDicesOnCasino($casino));
+
+        $duplicatesValues = [];
+        $duplicatesPlayersId = [];
+        foreach($dicesOnCasino as $iDicesOnCasino) {
+            
+            if (count(array_values(array_filter($dicesOnCasino, function($elem) use ($iDicesOnCasino) { return $elem->diceNumber === $iDicesOnCasino->diceNumber; }))) > 1) {
+                $duplicatesValues[] = $iDicesOnCasino->diceNumber;
+                $duplicatesPlayersId[] = $iDicesOnCasino->playerId;
+            }
+        }
+        $duplicatesValues = array_unique($duplicatesValues);
+
+        if (count($duplicatesValues) > 0) {
+            self::notifyAllPlayers('removeDuplicates', clienttranslate('Remove duplicates from casino ${casino}'), array(
+                'casino' => $casino,
+                'duplicatesValues' => $duplicatesValues,
+                'playersId' => $duplicatesPlayersId
+            ));
+
+            foreach($duplicatesValues as $duplicatesValue) {
+                $dicesOnCasino = array_values(array_filter($dicesOnCasino, function($elem) use ($duplicatesValue) { return $elem->diceNumber != $duplicatesValue; }));
+            }
+        }
+
+        $banknotesOnCasino = $this->getBankNotesFromDb(array_reverse($this->banknotes->getCardsInLocation( 'casino', $casino, 'type' ))); // banknotes on casino, ordered DESC
+
+        //self::dump('$dicesOnCasino '.$casino, $dicesOnCasino);
+        //self::dump('$banknotesOnCasino '.$casino, $banknotesOnCasino);
+
+        //self::debug("[GBA] casino=$casino countBanknotes=".count($banknotesOnCasino)." countDices=".count($dicesOnCasino));
+
+        // give banknotes to players
+        while (count($dicesOnCasino) > 0 && count($banknotesOnCasino) > 0) {
+            $playerId = array_shift($dicesOnCasino)->playerId;
+            $banknote = array_shift($banknotesOnCasino);
+            $facialValue = $banknote->value * 10000;
+
+            self::notifyAllPlayers('collectBanknote', clienttranslate('${player_name} wins ${facial_value}$ on casino ${casino}'), array(
+                'casino' => $casino,
+                'facial_value' => $facialValue,
+                'value' => $banknote->value,
+                'id' => $banknote->id,
+                'playerId' => $playerId,
+                'player_name' => $this->getPlayerName($playerId)
+            ));
+            $this->banknotes->moveCard($banknote->id, 'player', $playerId);
+
+            $sql = "UPDATE player SET player_score=player_score+$facialValue  WHERE player_id='$playerId'";
+            self::DbQuery($sql);
+        }
+
+        // remove remaining banknotes
+        while (count($banknotesOnCasino) > 0) {
+            $banknote = array_shift($banknotesOnCasino);
+
+            self::notifyAllPlayers('removeBanknote', clienttranslate('nobody wins ${facial_value}$ on casino ${casino}'), array(
+                'casino' => $casino,
+                'facial_value' => $banknote->value*10000,
+                'value' => $banknote->value,
+                'id' => $banknote->id,
+            ));
+
+            $this->banknotes->moveCard($banknote->id, 'discard');
+        }
+    }
+
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
@@ -318,9 +389,9 @@ class LasVegasThoun extends Table
 
         $sql = "SELECT count(*) FROM dices WHERE `placed` = false";
         $dicesToPlace = intval(self::getUniqueValueFromDB( $sql ));
-        self::debug('[GBA] $dicesToPlace='.$dicesToPlace);
+        //self::debug('[GBA] $dicesToPlace='.$dicesToPlace);
 
-        if ($dicesToPlace == 0) {
+        if ($dicesToPlace /*== 0 TODO TEMP*/ <= 10) {
             $this->gamestate->nextState('collectBills');
         } else {
             $protection = 0;
@@ -362,76 +433,9 @@ class LasVegasThoun extends Table
         $endGame = $round_number == self::getGameStateValue("player_number");
 
         for ($i = 1; $i <= 6; $i++) {
-
-            $dicesOnCasino = array_values($this->getDicesOnCasino($i));
-
-            $duplicates = [];
-            foreach($dicesOnCasino as $iDicesOnCasino) {
-                
-                if (count(array_values(array_filter($dicesOnCasino, function($elem) use ($iDicesOnCasino) { return $elem->diceNumber === $iDicesOnCasino->diceNumber; }))) > 1) {
-                    $duplicates[] = $iDicesOnCasino->diceNumber;
-                }
-            }
-            $duplicates = array_unique($duplicates);
-
-            if (count($duplicates) > 0) {
-                self::notifyAllPlayers('removeDuplicates', clienttranslate('Remove duplicates from casino ${casino}'), array(
-                    'casino' => $i,
-                    'duplicates' => $duplicates
-                ));
-
-                foreach($duplicates as $duplicate) {
-                    $dicesOnCasino = array_values(array_filter($dicesOnCasino, function($elem) use ($duplicate) { return $elem->diceNumber != $duplicate; }));
-                }
-            }
-
-            $banknotesOnCasino = $this->getBankNotesFromDb(array_reverse($this->banknotes->getCardsInLocation( 'casino', $i, 'type' ))); // banknotes on casino, ordered DESC
-
-            //self::dump('$dicesOnCasino '.$i, $dicesOnCasino);
-            //self::dump('$banknotesOnCasino '.$i, $banknotesOnCasino);
-
-            for ($b = 0; $b < count($dicesOnCasino) && $b < count($banknotesOnCasino); $b++) {
-                $hasBanknotes = $b < count($banknotesOnCasino);
-                $hasDices = $b < count($dicesOnCasino);
-                self::debug("[GBA] casino=$i b=$b hasBanknotes=$hasBanknotes hasDices=$hasDices");
-
-                if ($hasBanknotes && $hasDices) {
-                    $playerId = $dicesOnCasino[$b]->playerId;
-                    $banknote = $banknotesOnCasino[$b];
-                    $facialValue = $banknote->value*10000;
-
-                    self::notifyAllPlayers('collectBanknote', clienttranslate('${player_name} wins ${facial_value}$ on casino ${casino}'), array(
-                        'casino' => $i,
-                        'facial_value' => $facialValue,
-                        'value' => $banknote->value,
-                        'id' => $banknote->id,
-                        'playerId' => $playerId,
-                        'player_name' => $this->getPlayerName($playerId)
-                    ));
-                    $this->banknotes->moveCard($banknote->id, 'player', $playerId);
-
-                    $sql = "UPDATE player SET player_score=player_score+$facialValue  WHERE player_id='$playerId'";
-                    self::DbQuery($sql);
-
-                } else if ($hasBanknotes) {
-                    $banknote = $banknotesOnCasino[$b];
-
-                    self::notifyAllPlayers('removeBanknote', clienttranslate('nobody wins ${facial_value}$ on casino ${casino}'), array(
-                        'casino' => $i,
-                        'facial_value' => $banknote->value*10000,
-                        'value' => $banknote->value,
-                        'id' => $banknote->id,
-                    ));
-
-                    $this->banknotes->moveCard($banknote->id, 'discard');
-                } else if ($hasDices) {
-                    self::notifyAllPlayers('removeDices', clienttranslate('remaining dices on casino ${casino} are removed'), array(
-                        'casino' => $i
-                    ));
-                    break;
-                }
-            }
-        }
+            $this->sendCollectNotifsForCasino($i);
+        }        
+        self::notifyAllPlayers('removeDices', clienttranslate('dices are removed from casinos'), array());
 
         $this->gamestate->nextState($endGame ? 'endGame' : 'placeBills' );
     }

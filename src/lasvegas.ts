@@ -50,19 +50,19 @@ class Casino {
     }
 
     slideBanknoteTo(banknoteId: number, playerId: number) {
-        console.log('slideBanknoteTo', banknoteId, JSON.stringify(this.stock.items, null, 2), document.getElementById(`playertable-${playerId}`));
-        this.stock.removeFromStockById(`${banknoteId}`, `playertable-${playerId}`);
+        this.stock.removeFromStockById(`${banknoteId}`, `overall_player_board_${playerId}`);
     }
 
     removeBanknote(banknoteId: number) {
-        console.log('removeBanknote', banknoteId, JSON.stringify(this.stock.items, null, 2));
         this.stock.removeFromStockById(`${banknoteId}`);
     }
 
-    removeDices() {
-        Array.from(document.getElementById(`casino${this.casino}`).getElementsByClassName(`dice`)).forEach((element: HTMLDivElement) => {
-            (this.game as any).fadeOutAndDestroy(element);
-        });
+    removeDices(playerId?: number) {
+        let elements = Array.from(document.getElementById(`casino${this.casino}`).getElementsByClassName(`dice`));
+        if (playerId) {
+            elements = elements.filter((element: HTMLDivElement) => parseInt(element.dataset.playerId) === playerId);
+        }
+        elements.forEach((element: HTMLDivElement) => (this.game as any).fadeOutAndDestroy(element));
     }
 }
 
@@ -102,10 +102,12 @@ class LasVegas implements LasVegasGame {
             Object.entries(gamedatas.casinos[i].dices).forEach(([playerId, dices]) => {
                 const color = this.gamedatas.players[playerId].color;
                 for (let j=0; j<dices; j++) {
-                    dojo.place(this.createDiceHtml(i, color), `casino${i}`);
+                    dojo.place(this.createDiceHtml(i, playerId, color), `casino${i}`);
                 }
             });
         }
+
+        this.placeFirstPlayerToken(this.gamedatas.firstPlayerId);
 
         document.getElementById('dices-selector').addEventListener('click', event => this.diceSelectorClick(event));
 
@@ -199,10 +201,11 @@ class LasVegas implements LasVegasGame {
         }
 
         private setTableDices(dices?: number[]) {
-            const color = this.gamedatas.players[(this as any).getActivePlayerId()].color;
+            const playerId = (this as any).getActivePlayerId();
+            const color = this.gamedatas.players[playerId].color;
             $('dices-selector').innerHTML = '';
             dices?.forEach(dice => {
-                dojo.place(this.createDiceHtml(dice, color), 'dices-selector');
+                dojo.place(this.createDiceHtml(dice, playerId, color), 'dices-selector');
             });
         }
 
@@ -218,9 +221,9 @@ class LasVegas implements LasVegasGame {
             });
         }
 
-        private createDiceHtml(number: number, color: string) {
+        private createDiceHtml(number: number | string, playerId: number | string, color: string) {
             const blackDot = [parseInt(color.substr(0, 2), 16), parseInt(color.substr(2, 2), 16), parseInt(color.substr(4, 2), 16)].reduce((a, b) => a+b) > 460;
-            return `<div class="dice dice${number} ${blackDot ? 'black-dot' : 'white-dot'}" style="background-color: #${color}; border-color: #${color};"></div>`;
+            return `<div class="dice dice${number} ${blackDot ? 'black-dot' : 'white-dot'}" style="background-color: #${color}; border-color: #${color};" data-player-id="${playerId}"></div>`;
         }
 
         private moveDicesToCasino(casino: number, playerId: number) {
@@ -252,6 +255,23 @@ class LasVegas implements LasVegasGame {
             }
         }
 
+        placeFirstPlayerToken(playerId: number) {
+            const firstPlayerToken = document.getElementById('firstPlayerToken');
+            if (firstPlayerToken) {
+                const animation = (this as any).slideToObject( firstPlayerToken, `player_board_${playerId}` );
+                dojo.connect(animation, 'onEnd', dojo.hitch(this, () => {
+                    firstPlayerToken.style.top = 'unset';
+                    firstPlayerToken.style.left = 'unset';
+                    firstPlayerToken.style.position = 'unset';
+                    firstPlayerToken.style.zIndex = 'unset';
+                    document.getElementById(`player_board_${playerId}`).appendChild(firstPlayerToken);
+                }));
+                animation.play();
+            } else {
+                dojo.place( '<div id="firstPlayerToken"></div>', `player_board_${playerId}` );
+            }
+        }
+
 
        ///////////////////////////////////////////////////
        //// Reaction to cometD notifications
@@ -278,54 +298,38 @@ class LasVegas implements LasVegasGame {
             ];
         
             notifs.forEach((notif) => {
-                dojo.subscribe(notif[0], this, "notif_" + notif[0]);
+                dojo.subscribe(notif[0], this, `notif_${notif[0]}`);
                 (this as any).notifqueue.setSynchronous(notif[0], notif[1]);
             });
         }
 
         notif_newTurn(notif: Notif<NotifNewTurnArgs>) {
-            console.log('notif_newTurn', notif.args);
-
-            const firstPlayerToken = document.getElementById('firstPlayerToken');
-            if (firstPlayerToken) {
-                const animation = (this as any).slideToObject( firstPlayerToken, `player_board_${notif.args.playerId}` );
-                dojo.connect(animation, 'onEnd', dojo.hitch(this, () => {
-                    firstPlayerToken.style.top = 'unset';
-                    firstPlayerToken.style.left = 'unset';
-                    firstPlayerToken.style.position = 'unset';
-                    firstPlayerToken.style.zIndex = 'unset';
-                    document.getElementById(`player_board_${notif.args.playerId}`).appendChild(firstPlayerToken);
-                }));
-                animation.play();
-            } else {
-                dojo.place( '<div id="firstPlayerToken">FP</div>', `player_board_${notif.args.playerId}` );
-            }
-
+            this.placeFirstPlayerToken(notif.args.playerId);
         }
 
         notif_dicesPlayed(notif: Notif<NotifDicesPlayedArgs>) {
-            console.log('notif_dicesPlayed', notif.args);
             this.moveDicesToCasino(notif.args.casino, notif.args.playerId);
         }
 
         notif_removeDuplicates(notif: Notif<NotifRemoveDuplicatesArgs>) {
-            console.log('notif_removeDuplicates', notif.args.duplicates);
+            notif.args.playersId.forEach(playerId => this.casinos[notif.args.casino].removeDices(playerId));
         }
 
         notif_collectBanknote(notif: Notif<NotifCollectBanknoteArgs>) {
-            console.log('notif_collectBanknote', notif.args);
             this.casinos[notif.args.casino].slideBanknoteTo(notif.args.id, notif.args.playerId);
-            (this as any).scoreCtrl[notif.args.playerId].incValue(notif.args.value*10000);
+            const points = notif.args.value * 10000;
+            (this as any).scoreCtrl[notif.args.playerId].incValue(points);
+
+            (this as any).displayScoring( `banknotes${notif.args.casino}`, this.gamedatas.players[notif.args.playerId].color, points, 500);
+            this.casinos[notif.args.casino].removeDices(notif.args.playerId);
         }
 
         notif_removeBanknote(notif: Notif<NotifRemoveBanknoteArgs>) {
-            console.log('notif_removeBanknote', notif.args);
-            
+            this.casinos[notif.args.casino].removeBanknote(notif.args.id);
         }
 
-        notif_removeDices(notif: Notif<NotifRemoveDicesArgs>) {
-            console.log('notif_removeDices', notif.args);
-            this.casinos[notif.args.casino].removeDices();
+        notif_removeDices(notif: Notif<void>) {
+            this.casinos.forEach(casino => casino.removeDices());
         }
 
 }
