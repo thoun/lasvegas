@@ -76,6 +76,18 @@ class LasVegas implements LasVegasGame {
                 counter.setValue(dices.neutral);
                 this.dicesCountersNeutral[player.id] = counter;
             }
+
+            const suffix = document.createElement("span");
+            suffix.id = `player_score_suffix_${player.id}`;
+            suffix.style.marginLeft = '-4px';
+            const playerScore = document.getElementById(`player_board_${player.id}`).getElementsByTagName('div')[0];
+            playerScore.insertBefore(suffix, playerScore.getElementsByTagName('i')[0]);
+        });
+
+        setTimeout(() => {
+            Object.values(this.gamedatas.players).forEach(player => {
+                this.setScoreSuffix(Number(player.id));
+            });
         });
 
         for (let i=1; i<=6; i++) {
@@ -171,6 +183,10 @@ class LasVegas implements LasVegasGame {
 
 
        ///////////////////////////////////////////////////
+
+       private setScoreSuffix(playerId: number) {
+           document.getElementById(`player_score_suffix_${playerId}`).innerHTML = (this as any).scoreCtrl[playerId].getValue() ? '0.000$' : '$';
+       }
 
        private isVariant() {
            return this.gamedatas.variant;
@@ -323,10 +339,11 @@ class LasVegas implements LasVegasGame {
 
         notif_collectBanknote(notif: Notif<NotifCollectBanknoteArgs>) {
             this.casinos[notif.args.casino].slideBanknoteTo(notif.args.id, notif.args.playerId);
-            const points = notif.args.value * 10000;
+            const points = notif.args.value;
             (this as any).scoreCtrl[notif.args.playerId].incValue(points);
+            this.setScoreSuffix(notif.args.playerId);
 
-            (this as any).displayScoring( `banknotes${notif.args.casino}`, this.gamedatas.players[notif.args.playerId].color, points, END_TURN_ANIMATIONS_DURATION);
+            (this as any).displayScoring( `banknotes${notif.args.casino}`, this.gamedatas.players[notif.args.playerId].color, points*10000, END_TURN_ANIMATIONS_DURATION);
             this.casinos[notif.args.casino].removeDices(notif.args.playerId);
         }
 

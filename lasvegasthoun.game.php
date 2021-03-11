@@ -288,9 +288,8 @@ class LasVegasThoun extends Table
             $banknote = array_shift($banknotesOnCasino);
             $facialValue = $banknote->value * 10000;
 
-            self::notifyAllPlayers('collectBanknote', clienttranslate('${player_name} wins ${facial_value}$ on casino ${casino}'), array(
+            self::notifyAllPlayers('collectBanknote', clienttranslate('${player_name} wins ${value}0.000$ on casino ${casino}'), array(
                 'casino' => $casino,
-                'facial_value' => $facialValue,
                 'value' => $banknote->value,
                 'id' => $banknote->id,
                 'playerId' => $playerId,
@@ -302,7 +301,7 @@ class LasVegasThoun extends Table
             } else {
                 $this->banknotes->moveCard($banknote->id, 'player', $playerId);
 
-                $sql = "UPDATE player SET player_score=player_score+$facialValue  WHERE player_id='$playerId'";
+                $sql = "UPDATE player SET player_score = player_score + " . $banknote->value . "  WHERE player_id='$playerId'";
                 self::DbQuery($sql);
             }
         }
@@ -311,9 +310,8 @@ class LasVegasThoun extends Table
         while (count($banknotesOnCasino) > 0) {
             $banknote = array_shift($banknotesOnCasino);
 
-            self::notifyAllPlayers('removeBanknote', clienttranslate('Nobody wins ${facial_value}$ on casino ${casino}'), array(
+            self::notifyAllPlayers('removeBanknote', clienttranslate('Nobody wins ${value}0.000$$ on casino ${casino}'), array(
                 'casino' => $casino,
-                'facial_value' => $banknote->value*10000,
                 'value' => $banknote->value,
                 'id' => $banknote->id,
             ));
