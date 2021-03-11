@@ -12,6 +12,7 @@
         "src/counter.d.ts",
         "src/stock.d.ts",
         "src/lasvegas.d.ts",
+        "src/banknotes-stock.ts",
         "src/casino.ts",
         "src/lasvegas.ts",
         "src/define.ts"

@@ -88,7 +88,8 @@ class LasVegas implements LasVegasGame {
                 for (let j=0; j<dices.player; j++) {                    
                     this.casinos[i].addSpaceForPlayer(Number(playerId));
                     dojo.place(this.createDiceHtml(i, playerId, color),this.casinos[i].getPlayerSpaceId(Number(playerId)));
-                }
+                }                
+                this.casinos[i].reorderDices();
             });
 
             Object.values(gamedatas.casinos[i].dices).forEach(dices => {
@@ -96,6 +97,7 @@ class LasVegas implements LasVegasGame {
                     this.casinos[i].addSpaceForPlayer(0);
                     dojo.place(this.createDiceHtml(i, 0, this.neutralColor), this.casinos[i].getPlayerSpaceId(0));
                 }
+                this.casinos[i].reorderDices();
             });
         }
 
@@ -191,6 +193,7 @@ class LasVegas implements LasVegasGame {
                 dices.neutral.filter(dice => dice == i).forEach(dice => {
                     dojo.place(this.createDiceHtml(dice, 0, this.neutralColor), 'dices-selector');
                 });
+                this.casinos[i].reorderDices();
             }
         }
 
@@ -228,6 +231,7 @@ class LasVegas implements LasVegasGame {
                     element.style.position = 'unset';
                     element.style.zIndex = 'unset';
                     document.getElementById(this.casinos[casino].getPlayerSpaceId(playerId)).appendChild(element);
+                    this.casinos[casino].reorderDices();
                 }));
                 animation.play();
             });  
@@ -301,6 +305,7 @@ class LasVegas implements LasVegasGame {
             notif.args.neutralDices.forEach(neutralDice => {
                 this.casinos[neutralDice].addSpaceForPlayer(0);
                 dojo.place(this.createDiceHtml(neutralDice, 0, this.neutralColor), this.casinos[neutralDice].getPlayerSpaceId(0));
+                this.casinos[neutralDice].reorderDices();
             });
         }
 

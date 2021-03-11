@@ -1,3 +1,28 @@
+var BanknotesStock = /** @class */ (function () {
+    function BanknotesStock(game, casino, banknotes) {
+        this.stock = new ebg.stock();
+        this.stock.create(game, $("banknotes" + casino), 350, 165);
+        //this.stock.setOverlap(90,90);
+        this.stock.centerItems = true;
+        this.stock.image_items_per_row = 1;
+        this.stock.setSelectionMode(0);
+        for (var value = 1; value <= 9; value++) {
+            this.stock.addItemType(value, 10 - value, g_gamethemeurl + "img/banknotes.jpg", value - 1);
+        }
+        this.setNewBanknotes(banknotes);
+    }
+    BanknotesStock.prototype.setNewBanknotes = function (banknotes) {
+        var _this = this;
+        banknotes.forEach(function (banknote) { return _this.stock.addToStockWithId(banknote.value, "" + banknote.id, 'topbar'); });
+    };
+    BanknotesStock.prototype.slideBanknoteTo = function (banknoteId, playerId) {
+        this.stock.removeFromStockById("" + banknoteId, "overall_player_board_" + playerId);
+    };
+    BanknotesStock.prototype.removeBanknote = function (banknoteId) {
+        this.stock.removeFromStockById("" + banknoteId);
+    };
+    return BanknotesStock;
+}());
 var Casino = /** @class */ (function () {
     function Casino(game, casino, gamedatas) {
         this.game = game;
@@ -7,23 +32,13 @@ var Casino = /** @class */ (function () {
         this.banknotes = gamedatas.banknotes;
     }
     Casino.prototype.setNewBanknotes = function (banknotes) {
-        var _this = this;
-        banknotes.forEach(function (banknote) { return _this.stock.addToStockWithId(banknote.value, "" + banknote.id, 'topbar'); });
+        this.stock.setNewBanknotes(banknotes);
     };
     Casino.prototype.addHtml = function () {
         var _this = this;
         dojo.place("<div id=\"casino_wrapper" + this.casino + "\" class=\"casino_wrapper\">\n                <div id=\"casino" + this.casino + "\" class=\"casino\"></div>\n                <div id=\"banknotes" + this.casino + "\" class=\"banknotes\"></div>\n            </div>", 'casinos');
         document.getElementById("casino" + this.casino).addEventListener('click', function () { return _this.onSelection(); });
-        this.stock = new ebg.stock();
-        this.stock.create(this.game, $("banknotes" + this.casino), 350, 165);
-        //this.stock.setOverlap(90,90);
-        this.stock.centerItems = true;
-        this.stock.image_items_per_row = 1;
-        this.stock.setSelectionMode(0);
-        for (var value = 1; value <= 9; value++) {
-            this.stock.addItemType(value, 10 - value, g_gamethemeurl + "img/banknotes.jpg", value - 1);
-        }
-        this.setNewBanknotes(this.banknotes);
+        this.stock = new BanknotesStock(this.game, this.casino, this.banknotes);
     };
     Casino.prototype.setSelectable = function (selectable) {
         this.selectable = selectable;
@@ -35,10 +50,10 @@ var Casino = /** @class */ (function () {
         }
     };
     Casino.prototype.slideBanknoteTo = function (banknoteId, playerId) {
-        this.stock.removeFromStockById("" + banknoteId, "overall_player_board_" + playerId);
+        this.stock.slideBanknoteTo(banknoteId, playerId);
     };
     Casino.prototype.removeBanknote = function (banknoteId) {
-        this.stock.removeFromStockById("" + banknoteId);
+        this.stock.removeBanknote(banknoteId);
     };
     Casino.prototype.getPlayerSpaceId = function (playerId) {
         return "casino" + this.casino + "-player-" + playerId;
@@ -56,8 +71,32 @@ var Casino = /** @class */ (function () {
     Casino.prototype.addSpaceForPlayer = function (playerId) {
         var id = this.getPlayerSpaceId(playerId);
         if (!document.getElementById(id)) {
-            dojo.place("<div id=\"" + id + "\" class=\"casino-player\"></div>", "casino" + this.casino);
+            dojo.place("<div id=\"" + id + "\" class=\"casino-player\" dataset-player-id=\"" + playerId + "\"></div>", "casino" + this.casino);
         }
+    };
+    Casino.prototype.reorderDices = function () {
+        var parentNode = document.getElementById("casino" + this.casino);
+        var elements = Array.from(parentNode.getElementsByClassName("casino-player"));
+        var orderedElements = elements.slice().sort(function (a, b) {
+            if (a.childElementCount !== b.childElementCount) {
+                console.log('return', b.childElementCount - a.childElementCount);
+                return b.childElementCount - a.childElementCount;
+            }
+            else if (Number(a.dataset.playerId)) {
+                return 1;
+            }
+            else if (Number(b.dataset.playerId)) {
+                return -1;
+            }
+            else {
+                return 0;
+            }
+        });
+        orderedElements.forEach(function (element, index) {
+            if (element !== elements[index]) {
+                parentNode.insertBefore(element, index === orderedElements.length - 1 ? null : elements[index + 1]);
+            }
+        });
     };
     return Casino;
 }());
@@ -129,12 +168,14 @@ var LasVegas = /** @class */ (function () {
                     _this.casinos[i].addSpaceForPlayer(Number(playerId));
                     dojo.place(_this.createDiceHtml(i, playerId, color), _this.casinos[i].getPlayerSpaceId(Number(playerId)));
                 }
+                _this.casinos[i].reorderDices();
             });
             Object.values(gamedatas.casinos[i].dices).forEach(function (dices) {
                 for (var j = 0; j < dices.neutral; j++) {
                     _this.casinos[i].addSpaceForPlayer(0);
                     dojo.place(_this.createDiceHtml(i, 0, _this.neutralColor), _this.casinos[i].getPlayerSpaceId(0));
                 }
+                _this.casinos[i].reorderDices();
             });
         };
         var this_1 = this;
@@ -213,7 +254,9 @@ var LasVegas = /** @class */ (function () {
             dices.neutral.filter(function (dice) { return dice == i; }).forEach(function (dice) {
                 dojo.place(_this.createDiceHtml(dice, 0, _this.neutralColor), 'dices-selector');
             });
+            this_2.casinos[i].reorderDices();
         };
+        var this_2 = this;
         for (var i = 1; i <= 6; i++) {
             _loop_2(i);
         }
@@ -247,6 +290,7 @@ var LasVegas = /** @class */ (function () {
                 element.style.position = 'unset';
                 element.style.zIndex = 'unset';
                 document.getElementById(_this.casinos[casino].getPlayerSpaceId(playerId)).appendChild(element);
+                _this.casinos[casino].reorderDices();
             }));
             animation.play();
         });
@@ -314,6 +358,7 @@ var LasVegas = /** @class */ (function () {
         notif.args.neutralDices.forEach(function (neutralDice) {
             _this.casinos[neutralDice].addSpaceForPlayer(0);
             dojo.place(_this.createDiceHtml(neutralDice, 0, _this.neutralColor), _this.casinos[neutralDice].getPlayerSpaceId(0));
+            _this.casinos[neutralDice].reorderDices();
         });
     };
     LasVegas.prototype.notif_dicesPlayed = function (notif) {

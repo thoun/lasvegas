@@ -1,6 +1,6 @@
 class Casino {
     public selectable: boolean = false;
-    private stock: Stock;
+    private stock: BanknotesStock;
     private banknotes: Banknote[];
 
     constructor(private game: LasVegasGame, public casino: number, public gamedatas: CasinoGamedatas) {
@@ -8,7 +8,7 @@ class Casino {
     }
 
     setNewBanknotes(banknotes: Banknote[]): void {
-        banknotes.forEach(banknote => this.stock.addToStockWithId( banknote.value, `${banknote.id}`, 'topbar'));
+        this.stock.setNewBanknotes(banknotes);
     }
 
     addHtml() {
@@ -20,17 +20,7 @@ class Casino {
             'casinos');
         document.getElementById(`casino${this.casino}`).addEventListener('click', () => this.onSelection());
 
-        this.stock = new ebg.stock();
-        this.stock.create( this.game, $(`banknotes${this.casino}`), 350, 165 );
-        //this.stock.setOverlap(90,90);
-        this.stock.centerItems = true;
-        this.stock.image_items_per_row = 1;
-        this.stock.setSelectionMode(0);
-        for(let value=1; value<=9; value++) {
-            this.stock.addItemType( value, 10 - value, `${g_gamethemeurl}img/banknotes.jpg`, value-1 );
-        }
-
-        this.setNewBanknotes(this.banknotes)
+        this.stock = new BanknotesStock(this.game, this.casino, this.banknotes);
     }
 
     setSelectable(selectable: boolean) {
@@ -45,11 +35,11 @@ class Casino {
     }
 
     slideBanknoteTo(banknoteId: number, playerId: number) {
-        this.stock.removeFromStockById(`${banknoteId}`, `overall_player_board_${playerId}`);
+        this.stock.slideBanknoteTo(banknoteId, playerId);
     }
 
     removeBanknote(banknoteId: number) {
-        this.stock.removeFromStockById(`${banknoteId}`);
+        this.stock.removeBanknote(banknoteId);
     }
 
     getPlayerSpaceId(playerId: number): string {
