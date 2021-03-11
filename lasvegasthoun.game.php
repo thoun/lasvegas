@@ -112,7 +112,7 @@ class LasVegasThoun extends Table
                     // 3/4 players : 2 neutrals dices each
                     $neutralDices = 2;
                     // 3 players : we add 2 dices to first player
-                    if ($this->getPlayerCount() == 3 && intval(array_keys($playersDb)[0]) == $player_id) {
+                    if ($this->getPlayerCount() == 3 && intval(array_keys($players)[0]) == $player_id) {
                         $neutralDices = 4;
                     }
                 }
@@ -402,7 +402,7 @@ class LasVegasThoun extends Table
 
         $neutralDices = array();
         if ($this->isVariant() && $this->getPlayerCount() == 3) {
-            $playerWithAdditionalDices = intval(array_keys($playersDb)[0]);
+            $playerWithAdditionalDices = intval(array_keys($players)[0]);
             
             $sql = "SELECT dice_id FROM dices WHERE player_id = $playerWithAdditionalDices and `neutral` = true LIMIT 2";
             $neutralDicesDb = self::getCollectionFromDb( $sql );
