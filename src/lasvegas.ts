@@ -56,11 +56,11 @@ class LasVegas implements LasVegasGame {
         this.neutralColor = COLORS.find(color => !Object.values(this.gamedatas.players).some(player => player.color === color));
 
         Object.values(this.gamedatas.players).forEach(player => {
-            let html = `<div class="dice-counters"><div class="dice-counter">${this.createDiceHtml(5, player.id, player.color)} <span id="dice-counter-${player.id}"></span>`;
+            let html = `<div class="dice-counters">${this.createDiceHtml(5, player.id, player.color)} <span id="dice-counter-${player.id}"></span>`;
             if (this.isVariant()) {
                 html += `${this.createDiceHtml(5, player.id, this.neutralColor)} <span id="dice-counter-${player.id}-neutral"></span>`;
             }
-            html += `</div></div>`;
+            html += `</div>`;
 
             dojo.place(html, `player_board_${player.id}` );
 

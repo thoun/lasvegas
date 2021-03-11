@@ -88,11 +88,11 @@ var LasVegas = /** @class */ (function () {
         this.gamedatas = gamedatas;
         this.neutralColor = COLORS.find(function (color) { return !Object.values(_this.gamedatas.players).some(function (player) { return player.color === color; }); });
         Object.values(this.gamedatas.players).forEach(function (player) {
-            var html = "<div class=\"dice-counters\"><div class=\"dice-counter\">" + _this.createDiceHtml(5, player.id, player.color) + " <span id=\"dice-counter-" + player.id + "\"></span>";
+            var html = "<div class=\"dice-counters\">" + _this.createDiceHtml(5, player.id, player.color) + " <span id=\"dice-counter-" + player.id + "\"></span>";
             if (_this.isVariant()) {
                 html += _this.createDiceHtml(5, player.id, _this.neutralColor) + " <span id=\"dice-counter-" + player.id + "-neutral\"></span>";
             }
-            html += "</div></div>";
+            html += "</div>";
             dojo.place(html, "player_board_" + player.id);
             var dices = player.dices;
             var counter = new ebg.counter();

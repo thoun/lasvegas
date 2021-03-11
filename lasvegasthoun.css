@@ -91,19 +91,15 @@
 }
 
 .dice-counters {
-  display: flex;
   padding: 5px;
-}
-.dice-counters .dice-counter {
-  flex: 1;
   display: flex;
   align-items: center;
 }
-.dice-counters .dice-counter .dice {
+.dice-counters .dice {
   width: 16px;
   height: 16px;
   margin: unset;
-  margin-right: 8px;
+  margin: 8px;
   border-radius: 3px;
   box-shadow: unset;
 }

@@ -75,22 +75,17 @@
 }
 
 .dice-counters {
-    display: flex;
     padding: 5px;
+    display: flex;
+    align-items: center;
 
-    .dice-counter {
-        flex: 1;
-        display: flex;
-        align-items: center;
-
-        .dice {
-            width: 16px;
-            height: 16px;
-            margin: unset;
-            margin-right: 8px;
-            border-radius: 3px;
-            box-shadow: unset;
-        }
+    .dice {
+        width: 16px;
+        height: 16px;
+        margin: unset;
+        margin: 8px;
+        border-radius: 3px;
+        box-shadow: unset;
     }
 }
 
