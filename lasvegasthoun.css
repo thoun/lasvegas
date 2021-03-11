@@ -90,6 +90,7 @@
 }
 #casinos .casino_wrapper .casino .casino-player {
   position: relative;
+  text-align: center;
 }
 
 .dice-counters {
