@@ -68,7 +68,30 @@ class Casino {
     addSpaceForPlayer(playerId: number) {
         const id = this.getPlayerSpaceId(playerId);
         if (!document.getElementById(id)) {
-            dojo.place(`<div id="${id}" class="casino-player"></div>`, `casino${this.casino}`);
+            dojo.place(`<div id="${id}" class="casino-player" dataset-player-id="${playerId}"></div>`, `casino${this.casino}`);
         }
+    }
+
+    reorderDices() {
+        const parentNode = document.getElementById(`casino${this.casino}`);
+        const elements = Array.from(parentNode.getElementsByClassName(`casino-player`));
+        const orderedElements = elements.slice().sort((a: HTMLDivElement, b: HTMLDivElement) => {
+            if (a.childElementCount !== b.childElementCount) {
+                console.log('return', b.childElementCount - a.childElementCount);
+                return b.childElementCount - a.childElementCount;
+            } else if (Number(a.dataset.playerId)) {
+                return 1;
+            } else if (Number(b.dataset.playerId)) {
+                return -1;
+            } else {
+                return 0;
+            }
+        });
+        
+        orderedElements.forEach((element: HTMLDivElement, index: number) => {
+            if (element !== elements[index]) {
+                parentNode.insertBefore(element, index === orderedElements.length-1 ? null : elements[index+1]);
+            }
+        });
     }
 }
