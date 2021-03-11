@@ -85,14 +85,16 @@ class LasVegas implements LasVegasGame {
 
             Object.entries(gamedatas.casinos[i].dices).forEach(([playerId, dices]) => {
                 const color = this.gamedatas.players[playerId].color;
-                for (let j=0; j<dices.player; j++) {
-                    dojo.place(this.createDiceHtml(i, playerId, color), `casino${i}`);
+                for (let j=0; j<dices.player; j++) {                    
+                    this.casinos[i].addSpaceForPlayer(Number(playerId));
+                    dojo.place(this.createDiceHtml(i, playerId, color),this.casinos[i].getPlayerSpaceId(Number(playerId)));
                 }
             });
 
             Object.values(gamedatas.casinos[i].dices).forEach(dices => {
                 for (let j=0; j<dices.neutral; j++) {
-                    dojo.place(this.createDiceHtml(i, 0, this.neutralColor), `casino${i}`);
+                    this.casinos[i].addSpaceForPlayer(0);
+                    dojo.place(this.createDiceHtml(i, 0, this.neutralColor), this.casinos[i].getPlayerSpaceId(0));
                 }
             });
         }
@@ -209,17 +211,23 @@ class LasVegas implements LasVegasGame {
             return `<div class="dice dice${number} ${blackDot ? 'black-dot' : 'white-dot'}" style="background-color: #${color}; border-color: #${color};" data-player-id="${playerId}"></div>`;
         }
 
-        private moveDicesToCasino(casino: number, playerId: number) {
+        private moveDicesToCasino(casino: number, playerId_: number) {
+            const dicesElement = Array.from(document.getElementById('dices-selector').getElementsByClassName( `dice${casino}`));
 
-            Array.from(document.getElementById('dices-selector').getElementsByClassName( `dice${casino}`)).forEach((element: HTMLDivElement) => {
+            new Set(dicesElement.map((element: HTMLDivElement) => Number(element.dataset.playerId))).forEach(playerId => 
+                this.casinos[casino].addSpaceForPlayer(playerId)    
+            );
+
+            dicesElement.forEach((element: HTMLDivElement) => {
                 element.style.zIndex = '10';
-                const animation = (this as any).slideToObject( element, `casino${casino}` );
+                const playerId = Number(element.dataset.playerId);
+                const animation = (this as any).slideToObject( element, this.casinos[casino].getPlayerSpaceId(playerId) );
                 dojo.connect(animation, 'onEnd', dojo.hitch(this, () => {
                     element.style.top = 'unset';
                     element.style.left = 'unset';
                     element.style.position = 'unset';
                     element.style.zIndex = 'unset';
-                    document.getElementById(`casino${casino}`).appendChild(element);
+                    document.getElementById(this.casinos[casino].getPlayerSpaceId(playerId)).appendChild(element);
                 }));
                 animation.play();
             });  
@@ -290,7 +298,10 @@ class LasVegas implements LasVegasGame {
             this.placeFirstPlayerToken(notif.args.playerId);
             this.casinos.forEach(casino => casino.setNewBanknotes(notif.args.casinos[casino.casino]));
 
-            notif.args.neutralDices.forEach(neutralDice => dojo.place(this.createDiceHtml(neutralDice, 0, this.neutralColor), `casino${neutralDice}`));
+            notif.args.neutralDices.forEach(neutralDice => {
+                this.casinos[neutralDice].addSpaceForPlayer(0);
+                dojo.place(this.createDiceHtml(neutralDice, 0, this.neutralColor), this.casinos[neutralDice].getPlayerSpaceId(0));
+            });
         }
 
         notif_dicesPlayed(notif: Notif<NotifDicesPlayedArgs>) {

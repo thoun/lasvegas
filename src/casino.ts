@@ -22,6 +22,7 @@ class Casino {
 
         this.stock = new ebg.stock();
         this.stock.create( this.game, $(`banknotes${this.casino}`), 350, 165 );
+        //this.stock.setOverlap(90,90);
         this.stock.centerItems = true;
         this.stock.image_items_per_row = 1;
         this.stock.setSelectionMode(0);
@@ -51,11 +52,23 @@ class Casino {
         this.stock.removeFromStockById(`${banknoteId}`);
     }
 
+    getPlayerSpaceId(playerId: number): string {
+        return `casino${this.casino}-player-${playerId}`;
+    }
+
     removeDices(playerId?: number) {
-        let elements = Array.from(document.getElementById(`casino${this.casino}`).getElementsByClassName(`dice`));
-        if (playerId) {
-            elements = elements.filter((element: HTMLDivElement) => parseInt(element.dataset.playerId) === playerId);
+        if (playerId ?? null === null) {
+            Array.from(document.getElementById(`casino${this.casino}`).getElementsByClassName(`casino-player`))
+                .forEach((element: HTMLDivElement) => (this.game as any).fadeOutAndDestroy(element));
+        } else {
+            (this.game as any).fadeOutAndDestroy(document.getElementById(this.getPlayerSpaceId(playerId)));
         }
-        elements.forEach((element: HTMLDivElement) => (this.game as any).fadeOutAndDestroy(element));
+    }
+
+    addSpaceForPlayer(playerId: number) {
+        const id = this.getPlayerSpaceId(playerId);
+        if (!document.getElementById(id)) {
+            dojo.place(`<div id="${id}" class="casino-player"></div>`, `casino${this.casino}`);
+        }
     }
 }

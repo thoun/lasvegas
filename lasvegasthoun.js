@@ -16,6 +16,7 @@ var Casino = /** @class */ (function () {
         document.getElementById("casino" + this.casino).addEventListener('click', function () { return _this.onSelection(); });
         this.stock = new ebg.stock();
         this.stock.create(this.game, $("banknotes" + this.casino), 350, 165);
+        //this.stock.setOverlap(90,90);
         this.stock.centerItems = true;
         this.stock.image_items_per_row = 1;
         this.stock.setSelectionMode(0);
@@ -39,13 +40,24 @@ var Casino = /** @class */ (function () {
     Casino.prototype.removeBanknote = function (banknoteId) {
         this.stock.removeFromStockById("" + banknoteId);
     };
+    Casino.prototype.getPlayerSpaceId = function (playerId) {
+        return "casino" + this.casino + "-player-" + playerId;
+    };
     Casino.prototype.removeDices = function (playerId) {
         var _this = this;
-        var elements = Array.from(document.getElementById("casino" + this.casino).getElementsByClassName("dice"));
-        if (playerId) {
-            elements = elements.filter(function (element) { return parseInt(element.dataset.playerId) === playerId; });
+        if (playerId !== null && playerId !== void 0 ? playerId : null === null) {
+            Array.from(document.getElementById("casino" + this.casino).getElementsByClassName("casino-player"))
+                .forEach(function (element) { return _this.game.fadeOutAndDestroy(element); });
         }
-        elements.forEach(function (element) { return _this.game.fadeOutAndDestroy(element); });
+        else {
+            this.game.fadeOutAndDestroy(document.getElementById(this.getPlayerSpaceId(playerId)));
+        }
+    };
+    Casino.prototype.addSpaceForPlayer = function (playerId) {
+        var id = this.getPlayerSpaceId(playerId);
+        if (!document.getElementById(id)) {
+            dojo.place("<div id=\"" + id + "\" class=\"casino-player\"></div>", "casino" + this.casino);
+        }
     };
     return Casino;
 }());
@@ -114,12 +126,14 @@ var LasVegas = /** @class */ (function () {
                 var playerId = _a[0], dices = _a[1];
                 var color = _this.gamedatas.players[playerId].color;
                 for (var j = 0; j < dices.player; j++) {
-                    dojo.place(_this.createDiceHtml(i, playerId, color), "casino" + i);
+                    _this.casinos[i].addSpaceForPlayer(Number(playerId));
+                    dojo.place(_this.createDiceHtml(i, playerId, color), _this.casinos[i].getPlayerSpaceId(Number(playerId)));
                 }
             });
             Object.values(gamedatas.casinos[i].dices).forEach(function (dices) {
                 for (var j = 0; j < dices.neutral; j++) {
-                    dojo.place(_this.createDiceHtml(i, 0, _this.neutralColor), "casino" + i);
+                    _this.casinos[i].addSpaceForPlayer(0);
+                    dojo.place(_this.createDiceHtml(i, 0, _this.neutralColor), _this.casinos[i].getPlayerSpaceId(0));
                 }
             });
         };
@@ -217,17 +231,22 @@ var LasVegas = /** @class */ (function () {
         var blackDot = [parseInt(color.substr(0, 2), 16), parseInt(color.substr(2, 2), 16), parseInt(color.substr(4, 2), 16)].reduce(function (a, b) { return a + b; }) > 460;
         return "<div class=\"dice dice" + number + " " + (blackDot ? 'black-dot' : 'white-dot') + "\" style=\"background-color: #" + color + "; border-color: #" + color + ";\" data-player-id=\"" + playerId + "\"></div>";
     };
-    LasVegas.prototype.moveDicesToCasino = function (casino, playerId) {
+    LasVegas.prototype.moveDicesToCasino = function (casino, playerId_) {
         var _this = this;
-        Array.from(document.getElementById('dices-selector').getElementsByClassName("dice" + casino)).forEach(function (element) {
+        var dicesElement = Array.from(document.getElementById('dices-selector').getElementsByClassName("dice" + casino));
+        new Set(dicesElement.map(function (element) { return Number(element.dataset.playerId); })).forEach(function (playerId) {
+            return _this.casinos[casino].addSpaceForPlayer(playerId);
+        });
+        dicesElement.forEach(function (element) {
             element.style.zIndex = '10';
-            var animation = _this.slideToObject(element, "casino" + casino);
+            var playerId = Number(element.dataset.playerId);
+            var animation = _this.slideToObject(element, _this.casinos[casino].getPlayerSpaceId(playerId));
             dojo.connect(animation, 'onEnd', dojo.hitch(_this, function () {
                 element.style.top = 'unset';
                 element.style.left = 'unset';
                 element.style.position = 'unset';
                 element.style.zIndex = 'unset';
-                document.getElementById("casino" + casino).appendChild(element);
+                document.getElementById(_this.casinos[casino].getPlayerSpaceId(playerId)).appendChild(element);
             }));
             animation.play();
         });
@@ -292,7 +311,10 @@ var LasVegas = /** @class */ (function () {
         var _this = this;
         this.placeFirstPlayerToken(notif.args.playerId);
         this.casinos.forEach(function (casino) { return casino.setNewBanknotes(notif.args.casinos[casino.casino]); });
-        notif.args.neutralDices.forEach(function (neutralDice) { return dojo.place(_this.createDiceHtml(neutralDice, 0, _this.neutralColor), "casino" + neutralDice); });
+        notif.args.neutralDices.forEach(function (neutralDice) {
+            _this.casinos[neutralDice].addSpaceForPlayer(0);
+            dojo.place(_this.createDiceHtml(neutralDice, 0, _this.neutralColor), _this.casinos[neutralDice].getPlayerSpaceId(0));
+        });
     };
     LasVegas.prototype.notif_dicesPlayed = function (notif) {
         this.moveDicesToCasino(notif.args.casino, notif.args.playerId);
