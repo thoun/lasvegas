@@ -1,5 +1,155 @@
+var X_OVERLAP = 40;
+var Y_OVERLAP = 35;
+function updateDisplay(from) {
+    var _this = this;
+    if (!$(this.control_name)) {
+        return;
+    }
+    var controlMarginBox = dojo.marginBox(this.control_name);
+    var pageContentMarginWidth = controlMarginBox.w;
+    if (this.autowidth) {
+        var pageContentMarginBox = dojo.marginBox($("page-content"));
+        pageContentMarginWidth = pageContentMarginBox.w;
+    }
+    var topDestination = 0;
+    var leftDestination = 0;
+    var itemWidth = this.item_width;
+    var itemHeight = this.item_height;
+    var itemMargin = this.item_margin;
+    var controlWidth = 0;
+    var topDestinations = [];
+    var leftDestinations = [];
+    this.items.forEach(function (item, iIndex) {
+        ;
+        if (typeof item.loc == "undefined") {
+            leftDestination = iIndex * X_OVERLAP;
+            controlWidth = Math.max(controlWidth, leftDestination + itemWidth);
+            if (_this.centerItems) {
+                leftDestination += (pageContentMarginWidth - ((itemWidth + itemMargin) + (_this.items.length - 1) * X_OVERLAP)) / 2;
+            }
+            topDestinations[iIndex] = iIndex * Y_OVERLAP;
+            leftDestinations[iIndex] = leftDestination;
+        }
+    });
+    for (var i in this.items) {
+        topDestination = topDestinations[i];
+        leftDestination = leftDestinations[i];
+        var item = this.items[i];
+        var itemDivId = this.getItemDivId(item.id);
+        var $itemDiv = $(itemDivId);
+        if ($itemDiv) {
+            if (typeof item.loc == "undefined") {
+                dojo.fx.slideTo({
+                    node: $itemDiv,
+                    top: topDestination,
+                    left: leftDestination,
+                    duration: 1000,
+                    unit: "px"
+                }).play();
+            }
+            else {
+                this.page.slideToObject($itemDiv, item.loc, 1000).play();
+            }
+            dojo.style($itemDiv, "width", itemWidth + "px");
+            dojo.style($itemDiv, "height", itemHeight + "px");
+            dojo.style($itemDiv, "z-index", i);
+        }
+        else {
+            var type = this.item_type[item.type];
+            if (!type) {
+                console.error("Stock control: Unknow type: " + type);
+            }
+            if (typeof itemDivId == "undefined") {
+                console.error("Stock control: Undefined item id");
+            }
+            else {
+                if (typeof itemDivId == "object") {
+                    console.error("Stock control: Item id with 'object' type");
+                    console.error(itemDivId);
+                }
+            }
+            var additional_style = "";
+            var jstpl_stock_item_template = dojo.trim(dojo.string.substitute(this.jstpl_stock_item, {
+                id: itemDivId,
+                width: itemWidth,
+                height: itemHeight,
+                top: topDestination,
+                left: leftDestination,
+                image: type.image,
+                position: "z-index:" + i,
+                extra_classes: this.extraClasses,
+                additional_style: additional_style
+            }));
+            dojo.place(jstpl_stock_item_template, this.control_name);
+            $itemDiv = $(itemDivId);
+            if (typeof item.loc != "undefined") {
+                this.page.placeOnObject($itemDiv, item.loc);
+            }
+            if (this.selectable == 0) {
+                dojo.addClass($itemDiv, "stockitem_unselectable");
+            }
+            dojo.connect($itemDiv, "onclick", this, "onClickOnItem");
+            if (Number(type.image_position) !== 0) {
+                var backgroundPositionWidth = 0;
+                var backgroundPositionHeight = 0;
+                if (this.image_items_per_row) {
+                    var rowNumber = Math.floor(type.image_position / this.image_items_per_row);
+                    if (!this.image_in_vertical_row) {
+                        backgroundPositionWidth = (type.image_position - (rowNumber * this.image_items_per_row)) * 100;
+                        backgroundPositionHeight = rowNumber * 100;
+                    }
+                    else {
+                        backgroundPositionHeight = (type.image_position - (rowNumber * this.image_items_per_row)) * 100;
+                        backgroundPositionWidth = rowNumber * 100;
+                    }
+                    dojo.style($itemDiv, "backgroundPosition", "-" + backgroundPositionWidth + "% -" + backgroundPositionHeight + "%");
+                }
+                else {
+                    backgroundPositionWidth = type.image_position * 100;
+                    dojo.style($itemDiv, "backgroundPosition", "-" + backgroundPositionWidth + "% 0%");
+                }
+            }
+            if (this.onItemCreate) {
+                this.onItemCreate($itemDiv, item.type, itemDivId);
+            }
+            if (typeof from != "undefined") {
+                this.page.placeOnObject($itemDiv, from);
+                if (typeof item.loc == "undefined") {
+                    var anim = dojo.fx.slideTo({
+                        node: $itemDiv,
+                        top: topDestination,
+                        left: leftDestination,
+                        duration: 1000,
+                        unit: "px"
+                    });
+                    anim = this.page.transformSlideAnimTo3d(anim, $itemDiv, 1000, null);
+                    anim.play();
+                }
+                else {
+                    this.page.slideToObject($itemDiv, item.loc, 1000).play();
+                }
+            }
+            else {
+                dojo.style($itemDiv, "opacity", 0);
+                dojo.fadeIn({
+                    node: $itemDiv
+                }).play();
+            }
+        }
+    }
+    var controlHeight = (itemHeight + itemMargin) + (this.items.length - 1) * Y_OVERLAP;
+    dojo.style(this.control_name, "height", controlHeight + "px");
+    if (this.autowidth) {
+        if (controlWidth > 0) {
+            controlWidth += (this.item_width - itemWidth);
+        }
+        dojo.style(this.control_name, "width", controlWidth + "px");
+    }
+    dojo.style(this.control_name, "minHeight", (itemHeight + itemMargin) + "px");
+}
 var BanknotesStock = /** @class */ (function () {
     function BanknotesStock(game, casino, banknotes) {
+        var _this = this;
         this.stock = new ebg.stock();
         this.stock.create(game, $("banknotes" + casino), 350, 165);
         //this.stock.setOverlap(90,90);
@@ -7,8 +157,9 @@ var BanknotesStock = /** @class */ (function () {
         this.stock.image_items_per_row = 1;
         this.stock.setSelectionMode(0);
         for (var value = 1; value <= 9; value++) {
-            this.stock.addItemType(value, 10 - value, g_gamethemeurl + "img/banknotes.jpg", value - 1);
+            this.stock.addItemType(value, value, g_gamethemeurl + "img/banknotes.jpg", value - 1);
         }
+        this.stock.updateDisplay = function (from) { return updateDisplay.apply(_this.stock, [from]); };
         this.setNewBanknotes(banknotes);
     }
     BanknotesStock.prototype.setNewBanknotes = function (banknotes) {
@@ -79,7 +230,6 @@ var Casino = /** @class */ (function () {
         var elements = Array.from(parentNode.getElementsByClassName("casino-player"));
         var orderedElements = elements.slice().sort(function (a, b) {
             if (a.childElementCount !== b.childElementCount) {
-                console.log('return', b.childElementCount - a.childElementCount);
                 return b.childElementCount - a.childElementCount;
             }
             else if (Number(a.dataset.playerId)) {

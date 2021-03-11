@@ -67,7 +67,6 @@ class Casino {
         const elements = Array.from(parentNode.getElementsByClassName(`casino-player`));
         const orderedElements = elements.slice().sort((a: HTMLDivElement, b: HTMLDivElement) => {
             if (a.childElementCount !== b.childElementCount) {
-                console.log('return', b.childElementCount - a.childElementCount);
                 return b.childElementCount - a.childElementCount;
             } else if (Number(a.dataset.playerId)) {
                 return 1;
