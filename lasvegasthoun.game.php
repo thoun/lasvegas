@@ -1,11 +1,4 @@
 <?php
-/*
-error: "Propagating error from GS 1 (method: createGame): BGA service error (1.studio.boardgamearena.com 06/03 17:48:19)"
-expected: 0
-stack: "#0 /var/tournoi/release/tournoi-210301-1253/www/game/module/mainsite/tablemanager.game.php(7637): APP_DbObject->gameserverNodeRequest('243198', 'createGame', Array)↵#1 /var/tournoi/release/tournoi-210301-1253/www/game/module/mainsite/tablemanager.game.php(5661): Tablemanager->startplaying('243198')↵#2 /var/tournoi/release/tournoi-210301-1253/www/action/table/table.action.php(137): Tablemanager->acceptGameStart('243198')↵#3 /var/tournoi/release/tournoi-210301-1253/www/include/webActionCore.inc.php(189): action_table->acceptGameStart()↵#4 /var/tournoi/release/tournoi-210301-1253/www/index.php(247): launchWebAction('table', 'action_table', 'acceptGameStart', false, false, NULL, true, false)↵#5 {main}"
-*/
- // logs : https://studio.boardgamearena.com/1/lasvegasthoun/lasvegasthoun/logaccess.html?table=240799&err=1#bottom
- // db : https://db.1.studio.boardgamearena.com/index.php?db=ebd_lasvegasthoun_253410
  /**
   *------
   * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
@@ -205,12 +198,14 @@ class LasVegasThoun extends Table
 		$players_nbr = self::getGameStateValue("player_count");
         $roundPercent = 100 / $players_nbr;
 
-        $placedDices = 0;
+        $placedDices = intval(self::getUniqueValueFromDB("SELECT count(*) FROM dices INNER JOIN player ON dices.player_id = player.player_id WHERE `placed` = true and player_zombie = 0"));
         $neutralPlayers = $this->isVariant() ? 1 : 0;
         $totalDices = ($players_nbr + $neutralPlayers) * DICES_PER_PLAYER;
 
-        return $roundPercent * self::getGameStateValue('round_number') + ($placedDices * $roundPercent / $totalDices);
-        return 0;
+        self::debug('[GBA] other rounds percent : ' . $roundPercent * self::getGameStateValue('round_number') );
+        self::debug('[GBA] current round percent : ' . ($placedDices * $roundPercent / $totalDices) );
+        self::debug('[GBA] sum percent : ' . ($roundPercent * self::getGameStateValue('round_number')  + ($placedDices * $roundPercent / $totalDices)) );
+        return $roundPercent * self::getGameStateValue('round_number')  + ($placedDices * $roundPercent / $totalDices);
     }
 
 
@@ -301,7 +296,7 @@ class LasVegasThoun extends Table
             } else {
                 $this->banknotes->moveCard($banknote->id, 'player', $playerId);
 
-                $sql = "UPDATE player SET player_score = player_score + " . $banknote->value . "  WHERE player_id='$playerId'";
+                $sql = "UPDATE player SET player_score = player_score + " . $banknote->value . ", player_score_aux = player_score_aux + 1 WHERE player_id='$playerId'";
                 self::DbQuery($sql);
             }
         }

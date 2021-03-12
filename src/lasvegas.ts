@@ -49,7 +49,7 @@ class LasVegas implements LasVegasGame {
 
     public setup(gamedatas: LasVegasGamedatas) {
         
-        console.log( "Starting game setup" );
+        //console.log( "Starting game setup" );
         
         this.gamedatas = gamedatas;
 
@@ -119,7 +119,7 @@ class LasVegas implements LasVegasGame {
 
         this.setupNotifications();
 
-        console.log( "Ending game setup" );
+        //console.log( "Ending game setup" );
 
         //colors.forEach(color => dojo.place(this.createDiceHtml(5, color), `dices-test`));
     } 
@@ -131,7 +131,7 @@ class LasVegas implements LasVegasGame {
     //                  You can use this method to perform some user interface changes at this moment.
     //
     public onEnteringState(stateName: string, args: any) {
-        console.log( 'Entering state: '+stateName );
+        //console.log( 'Entering state: '+stateName );
 
         switch( stateName ) {
             case 'playerTurn':
@@ -297,7 +297,7 @@ class LasVegas implements LasVegasGame {
 
        */
         setupNotifications() {
-            console.log( 'notifications subscriptions setup' );
+            //console.log( 'notifications subscriptions setup' );
 
             const notifs = [
                 ['newTurn', 1],

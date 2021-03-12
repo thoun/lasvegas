@@ -284,8 +284,8 @@ var LasVegas = /** @class */ (function () {
         "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
     */
     LasVegas.prototype.setup = function (gamedatas) {
+        //console.log( "Starting game setup" );
         var _this = this;
-        console.log("Starting game setup");
         this.gamedatas = gamedatas;
         this.neutralColor = COLORS.find(function (color) { return !Object.values(_this.gamedatas.players).some(function (player) { return player.color === color; }); });
         Object.values(this.gamedatas.players).forEach(function (player) {
@@ -345,7 +345,7 @@ var LasVegas = /** @class */ (function () {
         this.placeFirstPlayerToken(this.gamedatas.firstPlayerId);
         document.getElementById('dices-selector').addEventListener('click', function (event) { return _this.diceSelectorClick(event); });
         this.setupNotifications();
-        console.log("Ending game setup");
+        //console.log( "Ending game setup" );
         //colors.forEach(color => dojo.place(this.createDiceHtml(5, color), `dices-test`));
     };
     ///////////////////////////////////////////////////
@@ -354,7 +354,7 @@ var LasVegas = /** @class */ (function () {
     //                  You can use this method to perform some user interface changes at this moment.
     //
     LasVegas.prototype.onEnteringState = function (stateName, args) {
-        console.log('Entering state: ' + stateName);
+        //console.log( 'Entering state: '+stateName );
         switch (stateName) {
             case 'playerTurn':
                 this.onEnteringPlayerTurn(args.args);
@@ -499,8 +499,8 @@ var LasVegas = /** @class */ (function () {
 
     */
     LasVegas.prototype.setupNotifications = function () {
+        //console.log( 'notifications subscriptions setup' );
         var _this = this;
-        console.log('notifications subscriptions setup');
         var notifs = [
             ['newTurn', 1],
             ['dicesPlayed', 1],
