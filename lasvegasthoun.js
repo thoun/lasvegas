@@ -1,5 +1,5 @@
 var X_OVERLAP = 40;
-var Y_OVERLAP = 35;
+var Y_OVERLAP = 0;
 function updateDisplay(from) {
     var _this = this;
     if (!$(this.control_name)) {

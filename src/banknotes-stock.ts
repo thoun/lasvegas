@@ -1,5 +1,5 @@
 const X_OVERLAP = 40;
-const Y_OVERLAP = 35;
+const Y_OVERLAP = 0;
 
 function updateDisplay(from: string) {
     if (!$(this.control_name)) {

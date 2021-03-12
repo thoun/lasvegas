@@ -36,6 +36,7 @@ class LasVegasThoun extends Table
         self::initGameStateLabels( array( 
             "player_count" => 10,
             "round_number" => 11,
+            "total_rounds" => 20,
             "variant" => 100
         ) );  
         
@@ -81,7 +82,7 @@ class LasVegasThoun extends Table
         /************ Start the game initialization *****/
         // Init global values with their initial values
         self::setGameStateInitialValue( 'player_count', count($players) );
-        // round number, zero-indexed. when round_number == player_count, game is over
+        self::setGameStateInitialValue( 'total_rounds', 4 );
         self::setGameStateInitialValue( 'round_number', 0 );
         
         // Init game statistics
@@ -158,7 +159,7 @@ class LasVegasThoun extends Table
   
         $playersDb = $result['players'];
 
-        $result['firstPlayerId'] = intval(array_keys($playersDb)[self::getGameStateValue("round_number")]);
+        $result['firstPlayerId'] = intval(array_keys($playersDb)[min(self::getGameStateValue("round_number"), count($result['players']) - 1)]);
 
         $dices = $this->getDices(null, true);
 
@@ -196,7 +197,8 @@ class LasVegasThoun extends Table
     */
     function getGameProgression() {
 		$players_nbr = self::getGameStateValue("player_count");
-        $roundPercent = 100 / $players_nbr;
+		$total_rounds = self::getGameStateValue("total_rounds");
+        $roundPercent = 100 / $total_rounds;
 
         $placedDices = intval(self::getUniqueValueFromDB("SELECT count(*) FROM dices INNER JOIN player ON dices.player_id = player.player_id WHERE `placed` = true and player_zombie = 0"));
         $neutralPlayers = $this->isVariant() ? 1 : 0;
@@ -387,7 +389,7 @@ class LasVegasThoun extends Table
     function stPlaceBills() {
         // set first player
         $players = $this->loadPlayersBasicInfos();
-        $firstPlayerId = intval(array_keys($players)[self::getGameStateValue("round_number")]);
+        $firstPlayerId = intval(array_keys($players)[min(self::getGameStateValue("round_number"), count($players) - 1)]);
         $this->gamestate->changeActivePlayer( $firstPlayerId );
 
         // reset dices
@@ -492,9 +494,10 @@ class LasVegasThoun extends Table
 
     function stCollectBills() {
         $round_number = self::getGameStateValue("round_number") + 1;
-        self::setGameStateValue("round_number", $round_number);
-
-        $endGame = $round_number == self::getGameStateValue("player_count");
+        $endGame = $round_number == self::getGameStateValue("total_rounds");
+        if (!$endGame) {
+            self::setGameStateValue("round_number", $round_number);
+        }
 
         for ($i = 1; $i <= 6; $i++) {
             $this->sendCollectNotifsForCasino($i);
