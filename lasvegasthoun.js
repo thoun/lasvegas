@@ -1,4 +1,4 @@
-var X_OVERLAP = 40;
+var X_OVERLAP = 30;
 var Y_OVERLAP = 0;
 function updateDisplay(from) {
     var _this = this;
@@ -53,6 +53,7 @@ function updateDisplay(from) {
             dojo.style($itemDiv, "width", itemWidth + "px");
             dojo.style($itemDiv, "height", itemHeight + "px");
             dojo.style($itemDiv, "z-index", i);
+            dojo.style($itemDiv, "background-size", "100% auto");
         }
         else {
             var type = this.item_type[item.type];
@@ -151,7 +152,7 @@ var BanknotesStock = /** @class */ (function () {
     function BanknotesStock(game, casino, banknotes) {
         var _this = this;
         this.stock = new ebg.stock();
-        this.stock.create(game, $("banknotes" + casino), 350, 165);
+        this.stock.create(game, $("banknotes" + casino), 233, 110);
         //this.stock.setOverlap(90,90);
         this.stock.centerItems = true;
         this.stock.image_items_per_row = 1;

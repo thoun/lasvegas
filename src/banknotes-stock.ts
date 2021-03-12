@@ -1,4 +1,4 @@
-const X_OVERLAP = 40;
+const X_OVERLAP = 30;
 const Y_OVERLAP = 0;
 
 function updateDisplay(from: string) {
@@ -59,6 +59,7 @@ function updateDisplay(from: string) {
             dojo.style($itemDiv, "width", itemWidth + "px");
             dojo.style($itemDiv, "height", itemHeight + "px");
             dojo.style($itemDiv, "z-index", i);
+            dojo.style($itemDiv, "background-size", "100% auto");
         } else {
             const type = this.item_type[item.type];
             if (!type) {
@@ -154,7 +155,7 @@ class BanknotesStock {
 
     constructor(game: LasVegasGame, casino: number, banknotes: Banknote[]) {
         this.stock = new ebg.stock();
-        this.stock.create( game, $(`banknotes${casino}`), 350, 165 );
+        this.stock.create( game, $(`banknotes${casino}`), 233, 110 );
         //this.stock.setOverlap(90,90);
         this.stock.centerItems = true;
         this.stock.image_items_per_row = 1;
