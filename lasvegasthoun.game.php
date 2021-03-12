@@ -310,7 +310,7 @@ class LasVegasThoun extends Table
         while (count($banknotesOnCasino) > 0) {
             $banknote = array_shift($banknotesOnCasino);
 
-            self::notifyAllPlayers('removeBanknote', clienttranslate('Nobody wins ${value}0.000$$ on casino ${casino}'), array(
+            self::notifyAllPlayers('removeBanknote', clienttranslate('Nobody wins ${value}0.000$ on casino ${casino}'), array(
                 'casino' => $casino,
                 'value' => $banknote->value,
                 'id' => $banknote->id,
@@ -536,31 +536,7 @@ class LasVegasThoun extends Table
     */
 
     function zombieTurn( $state, $active_player ) {
-    	$statename = $state['name'];
-    	
-        if ($state['type'] === "activeplayer") {
-            switch ($statename) {
-                case 'playerTurn':
-                    die(json_encode($active_player));
-
-
-
-                default:
-                    $this->gamestate->nextState( "zombiePass" );
-                	break;
-            }
-
-            return;
-        }
-
-        if ($state['type'] === "multipleactiveplayer") {
-            // Make sure player is in a non blocking status for role turn
-            $this->gamestate->setPlayerNonMultiactive( $active_player, '' );
-            
-            return;
-        }
-
-        throw new feException( "Zombie mode not supported at this game state: ".$statename );
+    	$this->gamestate->nextState("chooseCasino");
     }
     
 ///////////////////////////////////////////////////////////////////////////////////:
