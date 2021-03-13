@@ -253,8 +253,8 @@ var Casino = /** @class */ (function () {
 }());
 var END_TURN_ANIMATIONS_DURATION = 1000;
 var COLORS = [
-    'ffffff',
     '000000',
+    'ffffff',
     'ff0000',
     '008000',
     '0000ff',

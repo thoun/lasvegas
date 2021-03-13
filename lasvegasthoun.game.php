@@ -159,7 +159,7 @@ class LasVegasThoun extends Table
   
         $playersDb = $result['players'];
 
-        $result['firstPlayerId'] = intval(array_keys($playersDb)[min(self::getGameStateValue("round_number"), count($result['players']) - 1)]);
+        $result['firstPlayerId'] = intval(array_keys($playersDb)[self::getGameStateValue("round_number") % self::getGameStateValue("player_count")]);
 
         $dices = $this->getDices(null, true);
 
@@ -389,7 +389,7 @@ class LasVegasThoun extends Table
     function stPlaceBills() {
         // set first player
         $players = $this->loadPlayersBasicInfos();
-        $firstPlayerId = intval(array_keys($players)[min(self::getGameStateValue("round_number"), count($players) - 1)]);
+        $firstPlayerId = intval(array_keys($players)[self::getGameStateValue("round_number") % self::getGameStateValue("player_count")]);
         $this->gamestate->changeActivePlayer( $firstPlayerId );
 
         // reset dices

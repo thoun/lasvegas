@@ -10,8 +10,8 @@ declare const board: HTMLDivElement;
 const END_TURN_ANIMATIONS_DURATION = 1000;
 
 const COLORS = [
-    'ffffff',
     '000000',
+    'ffffff',
     'ff0000',
     '008000',
     '0000ff',
