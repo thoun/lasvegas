@@ -59,7 +59,7 @@ function updateDisplay(from: string) {
             dojo.style($itemDiv, "width", itemWidth + "px");
             dojo.style($itemDiv, "height", itemHeight + "px");
             dojo.style($itemDiv, "z-index", i);
-            dojo.style($itemDiv, "background-size", "100% auto");
+            // dojo.style($itemDiv, "background-size", "100% auto");
         } else {
             const type = this.item_type[item.type];
             if (!type) {
