@@ -307,7 +307,7 @@ class LasVegasThoun extends Table
         while (count($banknotesOnCasino) > 0) {
             $banknote = array_shift($banknotesOnCasino);
 
-            self::notifyAllPlayers('removeBanknote', clienttranslate('Nobody wins ${value}0.000$ on casino ${casino}'), array(
+            self::notifyAllPlayers('removeBanknote', clienttranslate('Casino ${casino} gets back ${value}0.000$'), array(
                 'casino' => $casino,
                 'value' => $banknote->value,
                 'id' => $banknote->id,
