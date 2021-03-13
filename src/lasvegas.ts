@@ -113,6 +113,7 @@ class LasVegas implements LasVegasGame {
             });
         }
 
+        this.updateTurnNumber(this.gamedatas.roundNumber);
         this.placeFirstPlayerToken(this.gamedatas.firstPlayerId);
 
         document.getElementById('dices-selector').addEventListener('click', event => this.diceSelectorClick(event));
@@ -283,6 +284,9 @@ class LasVegas implements LasVegasGame {
             }
         }
 
+        private updateTurnNumber(turnNumber: number) {            
+            document.getElementById('hand-counter').innerHTML = `${turnNumber} / 4`;
+        }
 
        ///////////////////////////////////////////////////
        //// Reaction to cometD notifications
@@ -315,6 +319,7 @@ class LasVegas implements LasVegasGame {
         }
 
         notif_newTurn(notif: Notif<NotifNewTurnArgs>) {
+            this.updateTurnNumber(notif.args.roundNumber);
             this.placeFirstPlayerToken(notif.args.playerId);
             this.casinos.forEach(casino => casino.setNewBanknotes(notif.args.casinos[casino.casino]));
 

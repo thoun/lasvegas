@@ -159,6 +159,8 @@ class LasVegasThoun extends Table
   
         $playersDb = $result['players'];
 
+        $result['roundNumber'] = self::getGameStateValue("round_number");
+
         $result['firstPlayerId'] = intval(array_keys($playersDb)[self::getGameStateValue("round_number") % self::getGameStateValue("player_count")]);
 
         $dices = $this->getDices(null, true);
@@ -424,12 +426,13 @@ class LasVegasThoun extends Table
             }            
         }
 
-        self::notifyAllPlayers('newTurn', clienttranslate('${player_name} is the first player'), array(
+        self::notifyAllPlayers('newTurn', clienttranslate('${player_name} is the first player'), [
+            'roundNumber' => self::getGameStateValue("round_number"),
             'casinos' => $casinos,
             'playerId' => $firstPlayerId,
             'player_name' => $this->getPlayerName($firstPlayerId),
             'neutralDices' => $neutralDices
-        ));
+        ]);
         
         // go to player turn
         $this->gamestate->nextState( '' );

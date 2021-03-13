@@ -343,6 +343,7 @@ var LasVegas = /** @class */ (function () {
         for (var i = 1; i <= 6; i++) {
             _loop_1(i);
         }
+        this.updateTurnNumber(this.gamedatas.roundNumber);
         this.placeFirstPlayerToken(this.gamedatas.firstPlayerId);
         document.getElementById('dices-selector').addEventListener('click', function (event) { return _this.diceSelectorClick(event); });
         this.setupNotifications();
@@ -488,6 +489,9 @@ var LasVegas = /** @class */ (function () {
             dojo.place('<div id="firstPlayerToken"></div>', "player_board_" + playerId);
         }
     };
+    LasVegas.prototype.updateTurnNumber = function (turnNumber) {
+        document.getElementById('hand-counter').innerHTML = turnNumber + " / 4";
+    };
     ///////////////////////////////////////////////////
     //// Reaction to cometD notifications
     /*
@@ -517,6 +521,7 @@ var LasVegas = /** @class */ (function () {
     };
     LasVegas.prototype.notif_newTurn = function (notif) {
         var _this = this;
+        this.updateTurnNumber(notif.args.roundNumber);
         this.placeFirstPlayerToken(notif.args.playerId);
         this.casinos.forEach(function (casino) { return casino.setNewBanknotes(notif.args.casinos[casino.casino]); });
         notif.args.neutralDices.forEach(function (neutralDice) {

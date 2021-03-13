@@ -1,11 +1,26 @@
-#dices-selector {
-    text-align: center;
-    min-height: 40px;
 
-    &.selectable {
-        .dice {
-            cursor: pointer;
+
+#dices-selector-and-counter {
+    display: flex;
+
+    #dices-selector {
+        flex: 1;
+        text-align: center;
+        min-height: 40px;
+    
+        &.selectable {
+            .dice {
+                cursor: pointer;
+            }
         }
+    }
+
+    #hand-counter{
+        font-size: 150%;
+        margin-left: 15px;
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
     }
 }
 

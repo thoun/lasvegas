@@ -37,6 +37,7 @@ interface LasVegasGamedatas {
     // Add here variables you set up in getAllDatas
     variant: boolean;
     casinos: CasinoGamedatas[];
+    roundNumber: number;
     firstPlayerId: number;
 }
 
@@ -49,7 +50,8 @@ interface EnteringPlayerTurnArgs {
 }
 
 interface NotifNewTurnArgs {
-    casinos: any;
+    roundNumber: number;
+    casinos: Banknote[][];
     playerId: number;
     neutralDices: number[];
 }
