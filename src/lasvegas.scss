@@ -116,3 +116,15 @@
     width: 32px;
     height: 32px;
 }
+
+.log {
+    .dice {
+        width: 16px;
+        height: 16px;
+        margin: unset;
+        margin: 2px;
+        border-radius: 3px;
+        box-shadow: unset;
+        vertical-align: middle;
+    }
+}

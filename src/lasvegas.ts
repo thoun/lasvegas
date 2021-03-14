@@ -364,4 +364,32 @@ class LasVegas implements LasVegasGame {
             }
         }
 
+    private formatDicesLog(playedDices: DicesCount, casino: number, playerColor: string) {
+        let str = '';
+        if (playedDices.player) {
+            str += `<span class="log-dice-counters">${playedDices.player} ${this.createDiceHtml(casino, 0, playerColor)}</span>`;
+        }
+        if (playedDices.neutral) {
+            str += `<span class="log-dice-counters">${playedDices.neutral} ${this.createDiceHtml(casino, 0, this.neutralColor)}</span>`;
+        }
+        return str;
+    }
+    
+    /* This enable to inject translatable styled things to logs or action bar */
+    /* @Override */
+    public format_string_recursive(log: string, args: any) {
+        try {
+            if (log && args && !args.processed) {
+                if (args.playedDices_rec && typeof args.playedDices_rec !== 'string') {
+                    const playedDices: DicesCount | string = args.playedDices_rec?.args?.playedDices ?? args.playedDices;
+                    const casino: number = args.playedDices_rec?.args?.casino ?? args.casino;
+                    const playerColor: string = args.playedDices_rec?.args?.playerColor ?? args.playerColor;
+                    args.playedDices_rec = this.formatDicesLog(playedDices as DicesCount, casino, playerColor);
+                }
+            }
+        } catch (e) {
+            console.error(log,args,"Exception thrown", e.stack);
+        }
+        return (this as any).inherited(arguments);
+    }
 }

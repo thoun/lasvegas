@@ -559,6 +559,35 @@ var LasVegas = /** @class */ (function () {
             this.dicesCountersNeutral.forEach(function (dicesCounter) { return dicesCounter.setValue(notif.args.resetDicesNumber.neutral); });
         }
     };
+    LasVegas.prototype.formatDicesLog = function (playedDices, casino, playerColor) {
+        var str = '';
+        if (playedDices.player) {
+            str += "<span class=\"log-dice-counters\">" + playedDices.player + " " + this.createDiceHtml(casino, 0, playerColor) + "</span>";
+        }
+        if (playedDices.neutral) {
+            str += "<span class=\"log-dice-counters\">" + playedDices.neutral + " " + this.createDiceHtml(casino, 0, this.neutralColor) + "</span>";
+        }
+        return str;
+    };
+    /* This enable to inject translatable styled things to logs or action bar */
+    /* @Override */
+    LasVegas.prototype.format_string_recursive = function (log, args) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        try {
+            if (log && args && !args.processed) {
+                if (args.playedDices_rec && typeof args.playedDices_rec !== 'string') {
+                    var playedDices = (_c = (_b = (_a = args.playedDices_rec) === null || _a === void 0 ? void 0 : _a.args) === null || _b === void 0 ? void 0 : _b.playedDices) !== null && _c !== void 0 ? _c : args.playedDices;
+                    var casino = (_f = (_e = (_d = args.playedDices_rec) === null || _d === void 0 ? void 0 : _d.args) === null || _e === void 0 ? void 0 : _e.casino) !== null && _f !== void 0 ? _f : args.casino;
+                    var playerColor = (_j = (_h = (_g = args.playedDices_rec) === null || _g === void 0 ? void 0 : _g.args) === null || _h === void 0 ? void 0 : _h.playerColor) !== null && _j !== void 0 ? _j : args.playerColor;
+                    args.playedDices_rec = this.formatDicesLog(playedDices, casino, playerColor);
+                }
+            }
+        }
+        catch (e) {
+            console.error(log, args, "Exception thrown", e.stack);
+        }
+        return this.inherited(arguments);
+    };
     return LasVegas;
 }());
 define([

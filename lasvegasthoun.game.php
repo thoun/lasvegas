@@ -331,18 +331,34 @@ class LasVegasThoun extends Table
 
     function chooseCasino( $casino ) {
         $player_id = intval(self::getActivePlayerId());
+
+        $playedDices = new Dices(
+            intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `value` = $casino and `placed` = false and `neutral` = false and `player_id` = ".$player_id )),
+            intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `value` = $casino and `placed` = false and `neutral` = true and `player_id` = ".$player_id ))
+        );
+        
         self::DbQuery( "UPDATE dices SET `placed` = true WHERE `value` = $casino AND `player_id` = $player_id" );
         self::DbQuery( "UPDATE dices SET `value` = 0 WHERE `placed` = false AND `player_id` = $player_id" );
 
+        $remainingDices = new Dices(
+            intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `placed` = false and `neutral` = false and `player_id` = ".$player_id )),
+            intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `placed` = false and `neutral` = true and `player_id` = ".$player_id ))
+        );
+
+        $playerColor = self::getUniqueValueFromDb( "SELECT player_color FROM player WHERE player_id = $player_id" );
         // notify dice played to players
-        self::notifyAllPlayers('dicesPlayed', clienttranslate('${player_name} placed diced to casino ${casino}'), array(
+        self::notifyAllPlayers('dicesPlayed', clienttranslate('${player_name} played ${playedDices_rec}'), array(
             'casino' => intval($casino),
             'playerId' => $player_id,
             'player_name' => self::getActivePlayerName(),
-            'remainingDices' => new Dices(
-                intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `placed` = false and `neutral` = false and `player_id` = ".$player_id )),
-                intval(self::getUniqueValueFromDB( "SELECT count(*) FROM dices WHERE `placed` = false and `neutral` = true and `player_id` = ".$player_id ))
-            )
+            'playerColor' => $playerColor,
+            'playedDices_rec'=> ['log' => '${playedDices}', 'args' => [
+                'playedDices' => $playedDices, 
+                'playerColor' => $playerColor,
+                'casino' => intval($casino),
+             ]],
+            'playedDices' => $playedDices,
+            'remainingDices' => $remainingDices
         ));
 
         $this->gamestate->nextState('chooseCasino');
