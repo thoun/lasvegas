@@ -271,6 +271,7 @@ var LasVegas = /** @class */ (function () {
         this.casinos = [];
         this.dicesCounters = [];
         this.dicesCountersNeutral = [];
+        this.diceAnimations = [];
     }
     /*
         setup:
@@ -357,9 +358,17 @@ var LasVegas = /** @class */ (function () {
     //
     LasVegas.prototype.onEnteringState = function (stateName, args) {
         //console.log( 'Entering state: '+stateName );
+        var _this = this;
+        var _a;
         switch (stateName) {
             case 'playerTurn':
-                this.onEnteringPlayerTurn(args.args);
+                var someDiceAnimation = (_a = this.diceAnimations[0]) !== null && _a !== void 0 ? _a : this.diceAnimations[1];
+                if (someDiceAnimation) {
+                    dojo.connect(someDiceAnimation, 'onEnd', dojo.hitch(this, function () { return _this.onEnteringPlayerTurn(args.args); }));
+                }
+                else {
+                    this.onEnteringPlayerTurn(args.args);
+                }
                 break;
         }
     };
@@ -430,7 +439,7 @@ var LasVegas = /** @class */ (function () {
         if (!this.checkAction('chooseCasino')) {
             return;
         }
-        this.moveDicesToCasino(casino, this.getActivePlayerId());
+        // this.moveDicesToCasino(casino, (this as any).getActivePlayerId());
         this.takeAction("chooseCasino", {
             casino: casino
         });
@@ -441,23 +450,24 @@ var LasVegas = /** @class */ (function () {
     };
     LasVegas.prototype.moveDicesToCasino = function (casino, playerId_) {
         var _this = this;
-        var dicesElement = Array.from(document.getElementById('dices-selector').getElementsByClassName("dice" + casino));
-        new Set(dicesElement.map(function (element) { return Number(element.dataset.playerId); })).forEach(function (playerId) {
-            return _this.casinos[casino].addSpaceForPlayer(playerId);
-        });
-        dicesElement.forEach(function (element) {
-            element.style.zIndex = '10';
-            var playerId = Number(element.dataset.playerId);
-            var animation = _this.slideToObject(element, _this.casinos[casino].getPlayerSpaceId(playerId));
-            dojo.connect(animation, 'onEnd', dojo.hitch(_this, function () {
-                element.style.top = 'unset';
-                element.style.left = 'unset';
-                element.style.position = 'unset';
-                element.style.zIndex = 'unset';
-                document.getElementById(_this.casinos[casino].getPlayerSpaceId(playerId)).appendChild(element);
+        var dicesSelector = document.getElementById('dices-selector');
+        var dicesElement = Array.from(dicesSelector.getElementsByClassName("dice" + casino));
+        var playersIds = new Set(dicesElement.map(function (element) { return Number(element.dataset.playerId); }));
+        playersIds.forEach(function (playerId) { return _this.casinos[casino].addSpaceForPlayer(playerId); });
+        Array.from(playersIds.keys()).forEach(function (playerId) {
+            // we put animated dices on a temp span
+            var dicesSpan = document.createElement("span");
+            dicesSpan.style.zIndex = '10';
+            dicesSpan.style.position = 'relative';
+            dicesSelector.insertBefore(dicesSpan, dicesElement.filter(function (element) { return Number(element.dataset.playerId) == playerId; })[0]);
+            dicesElement.filter(function (element) { return Number(element.dataset.playerId) == playerId; }).forEach(function (element) { return dicesSpan.appendChild(element); });
+            _this.diceAnimations[playerId ? 1 : 0] = _this.slideToObject(dicesSpan, _this.casinos[casino].getPlayerSpaceId(playerId));
+            dojo.connect(_this.diceAnimations[playerId ? 1 : 0], 'onEnd', dojo.hitch(_this, function () {
+                Array.from(dicesSpan.children).forEach(function (dice) { return document.getElementById(_this.casinos[casino].getPlayerSpaceId(playerId)).appendChild(dice); });
+                delete _this.diceAnimations[playerId ? 1 : 0];
                 _this.casinos[casino].reorderDices();
             }));
-            animation.play();
+            _this.diceAnimations[playerId ? 1 : 0].play();
         });
         Array.from(document.getElementById('dices-selector').getElementsByClassName("dice")).filter(function (element) { return !element.classList.contains("dice" + casino); }).forEach(function (element) {
             //(this as any).slideToObjectAndDestroy(element, `overall_player_board_${playerId}`);

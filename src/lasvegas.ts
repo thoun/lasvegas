@@ -30,6 +30,7 @@ class LasVegas implements LasVegasGame {
     private dicesCounters: Counter[] = [];
     private dicesCountersNeutral: Counter[] = [];
     private neutralColor: string;
+    private diceAnimations: any[] = [];
 
     constructor() {
     }
@@ -136,7 +137,12 @@ class LasVegas implements LasVegasGame {
 
         switch( stateName ) {
             case 'playerTurn':
-                this.onEnteringPlayerTurn(args.args);
+                const someDiceAnimation = this.diceAnimations[0] ?? this.diceAnimations[1];
+                if (someDiceAnimation) {
+                    dojo.connect(someDiceAnimation, 'onEnd', dojo.hitch(this, () => this.onEnteringPlayerTurn(args.args)));
+                } else {
+                    this.onEnteringPlayerTurn(args.args);
+                }
                 break;
         }
     }
@@ -219,7 +225,7 @@ class LasVegas implements LasVegasGame {
                 return;
             }          
 
-            this.moveDicesToCasino(casino, (this as any).getActivePlayerId());
+            // this.moveDicesToCasino(casino, (this as any).getActivePlayerId());
 
             this.takeAction("chooseCasino", {
                 casino
@@ -232,25 +238,27 @@ class LasVegas implements LasVegasGame {
         }
 
         private moveDicesToCasino(casino: number, playerId_: number) {
-            const dicesElement = Array.from(document.getElementById('dices-selector').getElementsByClassName( `dice${casino}`));
+            const dicesSelector = document.getElementById('dices-selector');
+            const dicesElement = Array.from(dicesSelector.getElementsByClassName( `dice${casino}`));
 
-            new Set(dicesElement.map((element: HTMLDivElement) => Number(element.dataset.playerId))).forEach(playerId => 
-                this.casinos[casino].addSpaceForPlayer(playerId)    
-            );
+            const playersIds = new Set(dicesElement.map((element: HTMLDivElement) => Number(element.dataset.playerId)));
+            playersIds.forEach(playerId => this.casinos[casino].addSpaceForPlayer(playerId));
 
-            dicesElement.forEach((element: HTMLDivElement) => {
-                element.style.zIndex = '10';
-                const playerId = Number(element.dataset.playerId);
-                const animation = (this as any).slideToObject( element, this.casinos[casino].getPlayerSpaceId(playerId) );
-                dojo.connect(animation, 'onEnd', dojo.hitch(this, () => {
-                    element.style.top = 'unset';
-                    element.style.left = 'unset';
-                    element.style.position = 'unset';
-                    element.style.zIndex = 'unset';
-                    document.getElementById(this.casinos[casino].getPlayerSpaceId(playerId)).appendChild(element);
+            Array.from(playersIds.keys()).forEach(playerId => {
+                // we put animated dices on a temp span
+                const dicesSpan = document.createElement("span");
+                dicesSpan.style.zIndex = '10';
+                dicesSpan.style.position = 'relative';
+                dicesSelector.insertBefore(dicesSpan, dicesElement.filter((element: HTMLDivElement) => Number(element.dataset.playerId) == playerId)[0]); 
+                dicesElement.filter((element: HTMLDivElement) => Number(element.dataset.playerId) == playerId).forEach(element => dicesSpan.appendChild(element));
+                
+                this.diceAnimations[playerId ? 1 : 0] = (this as any).slideToObject( dicesSpan, this.casinos[casino].getPlayerSpaceId(playerId) );
+                dojo.connect(this.diceAnimations[playerId ? 1 : 0], 'onEnd', dojo.hitch(this, () => {
+                    Array.from(dicesSpan.children).forEach(dice => document.getElementById(this.casinos[casino].getPlayerSpaceId(playerId)).appendChild(dice));
+                    delete this.diceAnimations[playerId ? 1 : 0];
                     this.casinos[casino].reorderDices();
                 }));
-                animation.play();
+                this.diceAnimations[playerId ? 1 : 0].play();
             });  
 
             Array.from(document.getElementById('dices-selector').getElementsByClassName( `dice`)).filter(element => !element.classList.contains(`dice${casino}`)).forEach((element: HTMLDivElement) => {
