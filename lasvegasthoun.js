@@ -212,12 +212,25 @@ var Casino = /** @class */ (function () {
     };
     Casino.prototype.removeDices = function (playerId) {
         var _this = this;
-        if (playerId !== null && playerId !== void 0 ? playerId : null === null) {
+        if (playerId === void 0) { playerId = null; }
+        if (playerId === null) {
             Array.from(document.getElementById("casino" + this.casino).getElementsByClassName("casino-player"))
-                .forEach(function (element) { return _this.game.fadeOutAndDestroy(element); });
+                .forEach(function (element) {
+                try {
+                    _this.game.fadeOutAndDestroy(element);
+                }
+                catch (e) {
+                    // element could be destroyed during animation if he was removed by playerId, then we ignore fadeOutAndDestroy error
+                }
+            });
         }
         else {
-            this.game.fadeOutAndDestroy(document.getElementById(this.getPlayerSpaceId(playerId)));
+            try {
+                this.game.fadeOutAndDestroy(document.getElementById(this.getPlayerSpaceId(playerId)));
+            }
+            catch (e) {
+                // element could be destroyed during animation if he was removed by playerId, then we ignore fadeOutAndDestroy error
+            }
         }
     };
     Casino.prototype.addSpaceForPlayer = function (playerId) {

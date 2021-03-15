@@ -46,12 +46,22 @@ class Casino {
         return `casino${this.casino}-player-${playerId}`;
     }
 
-    removeDices(playerId?: number) {
-        if (playerId ?? null === null) {
+    removeDices(playerId: number = null) {
+        if (playerId === null) {
             Array.from(document.getElementById(`casino${this.casino}`).getElementsByClassName(`casino-player`))
-                .forEach((element: HTMLDivElement) => (this.game as any).fadeOutAndDestroy(element));
+                .forEach((element: HTMLDivElement) => {
+                    try {
+                        (this.game as any).fadeOutAndDestroy(element);
+                    } catch (e) {
+                        // element could be destroyed during animation if he was removed by playerId, then we ignore fadeOutAndDestroy error
+                    }
+                });
         } else {
-            (this.game as any).fadeOutAndDestroy(document.getElementById(this.getPlayerSpaceId(playerId)));
+            try {
+                (this.game as any).fadeOutAndDestroy(document.getElementById(this.getPlayerSpaceId(playerId)));
+            } catch (e) {
+                // element could be destroyed during animation if he was removed by playerId, then we ignore fadeOutAndDestroy error
+            }
         }
     }
 
