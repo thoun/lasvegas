@@ -1,5 +1,5 @@
 <?php
-define('APP_GAMEMODULE_PATH', '');
+// define('APP_GAMEMODULE_PATH', '');
 
 /**
  * Collection of stub classes for testing and stubs
@@ -48,10 +48,10 @@ class APP_DbObject extends APP_Object {
         return 0;
     }
     
-    function getCollectionFromDB($query, $single = false) {
+    /*function getCollectionFromDB($query, $single = false) {
         echo "dbquery coll: $query\n";
         return array ();
-    }
+    }*/
     
     function getNonEmptyCollectionFromDB($sql) {
         return array ();
@@ -302,6 +302,14 @@ abstract class Table extends APP_GameClass {
     }
     
     function getNew($deck_definition) {
+        echo 'getNew';
+        if ($deck_definition == "module.common.deck" ) {
+            echo 'getNew deck';
+            $deck = new stdClass();
+            $deck->init = function () {};
+            $deck->autoshuffle = false;
+            return $deck;
+        }
     }
     
     // Give standard extra time to this player

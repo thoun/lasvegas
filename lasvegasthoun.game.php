@@ -491,11 +491,11 @@ class LasVegasThoun extends Table
 
     function getDicesOnCasino($casino)  {
         $sql = "SELECT player_id, count(*) as diceNumber FROM dices WHERE `placed` = true and `neutral` = false and `value` = $casino GROUP BY player_id";
-        $playerdicesOnCasinoDb = self::getCollectionFromDb( $sql );
+        $playerdicesOnCasinoDb = $this->getCollectionFromDb( $sql );
         $sql = "SELECT 0 as player_id, count(*) as diceNumber FROM dices WHERE `placed` = true and `neutral` = true and `value` = $casino";
-        $neutraldicesOnCasinoDb = self::getCollectionFromDb( $sql );
+        $neutraldicesOnCasinoDb = $this->getCollectionFromDb( $sql );
 
-        $dicesOnCasinoDb = intval($neutraldicesOnCasinoDb[0]['player_id']) > 0 ? 
+        $dicesOnCasinoDb = count($neutraldicesOnCasinoDb) > 0 ? 
             array_merge($playerdicesOnCasinoDb, $neutraldicesOnCasinoDb) : 
             $playerdicesOnCasinoDb;
         
