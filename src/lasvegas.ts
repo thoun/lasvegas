@@ -351,12 +351,16 @@ class LasVegas implements LasVegasGame {
         }
 
         notif_collectBanknote(notif: Notif<NotifCollectBanknoteArgs>) {
-            this.casinos[notif.args.casino].slideBanknoteTo(notif.args.id, notif.args.playerId);
-            const points = notif.args.value;
-            (this as any).scoreCtrl[notif.args.playerId].incValue(points);
-            this.setScoreSuffix(notif.args.playerId);
+            if (notif.args.playerId) {
+                this.casinos[notif.args.casino].slideBanknoteTo(notif.args.id, notif.args.playerId);
+                const points = notif.args.value;
+                (this as any).scoreCtrl[notif.args.playerId].incValue(points);
+                this.setScoreSuffix(notif.args.playerId);
 
-            (this as any).displayScoring( `banknotes${notif.args.casino}`, this.gamedatas.players[notif.args.playerId].color, points*10000, END_TURN_ANIMATIONS_DURATION);
+                (this as any).displayScoring( `banknotes${notif.args.casino}`, this.gamedatas.players[notif.args.playerId].color, points*10000, END_TURN_ANIMATIONS_DURATION);
+            } else {
+                this.casinos[notif.args.casino].removeBanknote(notif.args.id);
+            }
             this.casinos[notif.args.casino].removeDices(notif.args.playerId);
         }
 

@@ -552,11 +552,16 @@ var LasVegas = /** @class */ (function () {
         notif.args.playersId.forEach(function (playerId) { return _this.casinos[notif.args.casino].removeDices(playerId); });
     };
     LasVegas.prototype.notif_collectBanknote = function (notif) {
-        this.casinos[notif.args.casino].slideBanknoteTo(notif.args.id, notif.args.playerId);
-        var points = notif.args.value;
-        this.scoreCtrl[notif.args.playerId].incValue(points);
-        this.setScoreSuffix(notif.args.playerId);
-        this.displayScoring("banknotes" + notif.args.casino, this.gamedatas.players[notif.args.playerId].color, points * 10000, END_TURN_ANIMATIONS_DURATION);
+        if (notif.args.playerId) {
+            this.casinos[notif.args.casino].slideBanknoteTo(notif.args.id, notif.args.playerId);
+            var points = notif.args.value;
+            this.scoreCtrl[notif.args.playerId].incValue(points);
+            this.setScoreSuffix(notif.args.playerId);
+            this.displayScoring("banknotes" + notif.args.casino, this.gamedatas.players[notif.args.playerId].color, points * 10000, END_TURN_ANIMATIONS_DURATION);
+        }
+        else {
+            this.casinos[notif.args.casino].removeBanknote(notif.args.id);
+        }
         this.casinos[notif.args.casino].removeDices(notif.args.playerId);
     };
     LasVegas.prototype.notif_removeBanknote = function (notif) {
