@@ -218,6 +218,12 @@ class LasVegas implements LasVegasGame {
                 });
                 this.casinos[i].reorderDices();
             }
+            Array.from($('dices-selector').getElementsByClassName('dice')).forEach((dice: HTMLDivElement) => {
+                dice.classList.add('rolled');
+                setTimeout(() => {
+                    dice.getElementsByClassName('die-list')[0].classList.add(Math.random() < 0.5 ? 'odd-roll' : 'even-roll');
+                }, 100); 
+            });
         }
 
         public casinoSelected(casino: number) {
@@ -236,14 +242,15 @@ class LasVegas implements LasVegasGame {
             const blackDot = [parseInt(color.substr(0, 2), 16), parseInt(color.substr(2, 2), 16), parseInt(color.substr(4, 2), 16)].reduce((a, b) => a+b) > 460;
             //return `<div class="dice dice${number} ${blackDot ? 'black-dot' : 'white-dot'}" style="background-color: #${color}; border-color: #${color};" data-player-id="${playerId}"></div>`;
             let html = `<div class="dice dice${number}" data-player-id="${playerId}">
-            <ol class="die-list even-roll" data-roll="${number}">
-              <li class="die-item" data-side="${number}" style="background-color: #${color}; border-color: #${color};">`;
-            for (let i=1; i<=number; i++) {
-                html += `<span class="dot ${blackDot ? 'black-dot' : 'white-dot'}"></span>`;
+            <ol class="die-list" data-roll="${number}">`;
+            for (let die=1; die<=6; die++) {
+                html += `<li class="die-item" data-side="${die}" style="background-color: #${color}; border-color: #${color};">`;
+                for (let i=1; i<=die; i++) {
+                    html += `<span class="dot ${blackDot ? 'black-dot' : 'white-dot'}"></span>`;
+                }
+                html += `</li>`;
             }
-            html += `  </li>
-            </ol>
-            </div>`;
+            html += `</ol></div>`;
             return html;
         }
 
@@ -349,6 +356,11 @@ class LasVegas implements LasVegasGame {
         }
 
         notif_dicesPlayed(notif: Notif<NotifDicesPlayedArgs>) {
+
+            Array.from($('dices-selector').getElementsByClassName('dice')).forEach((dice: HTMLDivElement) => {
+                dice.classList.remove('rolled');              
+            });
+
             this.moveDicesToCasino(notif.args.casino, notif.args.playerId);
             this.dicesCounters[notif.args.playerId].toValue(notif.args.remainingDices.player);
             if (this.isVariant()) {                
