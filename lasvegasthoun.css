@@ -5,6 +5,8 @@
   flex: 1;
   text-align: center;
   min-height: 40px;
+  display: flex;
+  justify-content: center;
 }
 #dices-selector-and-counter #dices-selector.selectable .dice {
   cursor: pointer;
@@ -15,45 +17,6 @@
   display: flex;
   align-items: center;
   padding: 10px 20px;
-}
-
-.dice {
-  display: inline-block;
-  position: relative;
-  background-position: 0px 0px;
-  width: 33px;
-  height: 33px;
-  margin: 3px;
-  border-radius: 6px;
-  border-style: outset;
-  border-width: 1px;
-  box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.5);
-}
-.dice.white-dot {
-  background: url("img/dices-white.png"), black;
-  background-size: auto 100%;
-}
-.dice.black-dot {
-  background: url("img/dices-black.png"), black;
-  background-size: auto 100%;
-}
-.dice.dice1 {
-  background-position-x: 0%;
-}
-.dice.dice2 {
-  background-position-x: 20%;
-}
-.dice.dice3 {
-  background-position-x: 40%;
-}
-.dice.dice4 {
-  background-position-x: 60%;
-}
-.dice.dice5 {
-  background-position-x: 80%;
-}
-.dice.dice6 {
-  background-position-x: 100%;
 }
 
 #casinos {
@@ -111,11 +74,8 @@
   align-items: center;
 }
 .dice-counters .dice {
-  width: 16px;
-  height: 16px;
+  transform: scale(0.5);
   margin: unset;
-  margin: 8px;
-  border-radius: 3px;
   box-shadow: unset;
 }
 
@@ -128,11 +88,145 @@
 }
 
 .log .dice {
-  width: 16px;
-  height: 16px;
+  transform: scale(0.5);
   margin: unset;
-  margin: 2px;
-  border-radius: 3px;
   box-shadow: unset;
   vertical-align: middle;
+}
+
+.dice {
+  display: inline-block;
+  position: relative;
+  width: 33px;
+  height: 33px;
+  margin: 3px;
+}
+
+.die-list {
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  height: 100%;
+  list-style-type: none;
+  width: 100%;
+}
+
+.die-item {
+  pointer-events: none;
+  display: grid;
+  grid-column: 1;
+  grid-row: 1;
+  grid-template-areas: "one two three" "four five six" "seven eight nine";
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  height: 100%;
+  padding: 0.25rem;
+  width: 100%;
+  box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.5);
+  border-radius: 20%;
+  border-style: outset;
+  border-width: 1px;
+  box-sizing: border-box;
+}
+
+.dot {
+  align-self: center;
+  border-radius: 50%;
+  display: block;
+  height: 0.3125rem;
+  justify-self: center;
+  width: 0.3125rem;
+}
+.dot.white-dot {
+  background-color: white;
+  box-shadow: inset -0.0375rem 0.0375rem 0.0625rem rgba(0, 0, 0, 0.5);
+}
+.dot.black-dot {
+  background-color: black;
+  box-shadow: inset 0.0375rem -0.0375rem 0.0625rem rgba(144, 144, 144, 0.79);
+}
+
+[data-side="1"] .dot:nth-of-type(1) {
+  grid-area: five;
+}
+
+[data-side="2"] .dot:nth-of-type(1) {
+  grid-area: one;
+}
+
+[data-side="2"] .dot:nth-of-type(2) {
+  grid-area: nine;
+}
+
+[data-side="3"] .dot:nth-of-type(1) {
+  grid-area: one;
+}
+
+[data-side="3"] .dot:nth-of-type(2) {
+  grid-area: five;
+}
+
+[data-side="3"] .dot:nth-of-type(3) {
+  grid-area: nine;
+}
+
+[data-side="4"] .dot:nth-of-type(1) {
+  grid-area: one;
+}
+
+[data-side="4"] .dot:nth-of-type(2) {
+  grid-area: three;
+}
+
+[data-side="4"] .dot:nth-of-type(3) {
+  grid-area: seven;
+}
+
+[data-side="4"] .dot:nth-of-type(4) {
+  grid-area: nine;
+}
+
+[data-side="5"] .dot:nth-of-type(1) {
+  grid-area: one;
+}
+
+[data-side="5"] .dot:nth-of-type(2) {
+  grid-area: three;
+}
+
+[data-side="5"] .dot:nth-of-type(3) {
+  grid-area: five;
+}
+
+[data-side="5"] .dot:nth-of-type(4) {
+  grid-area: seven;
+}
+
+[data-side="5"] .dot:nth-of-type(5) {
+  grid-area: nine;
+}
+
+[data-side="6"] .dot:nth-of-type(1) {
+  grid-area: one;
+}
+
+[data-side="6"] .dot:nth-of-type(2) {
+  grid-area: three;
+}
+
+[data-side="6"] .dot:nth-of-type(3) {
+  grid-area: four;
+}
+
+[data-side="6"] .dot:nth-of-type(4) {
+  grid-area: six;
+}
+
+[data-side="6"] .dot:nth-of-type(5) {
+  grid-area: seven;
+}
+
+[data-side="6"] .dot:nth-of-type(6) {
+  grid-area: nine;
 }

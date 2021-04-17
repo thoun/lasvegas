@@ -362,7 +362,7 @@ var LasVegas = /** @class */ (function () {
         document.getElementById('dices-selector').addEventListener('click', function (event) { return _this.diceSelectorClick(event); });
         this.setupNotifications();
         //console.log( "Ending game setup" );
-        //colors.forEach(color => dojo.place(this.createDiceHtml(5, color), `dices-test`));
+        // COLORS.forEach(color => dojo.place(this.createDiceHtml(5, null, color), `dices-test`));
     };
     ///////////////////////////////////////////////////
     //// Game & client states
@@ -459,7 +459,13 @@ var LasVegas = /** @class */ (function () {
     };
     LasVegas.prototype.createDiceHtml = function (number, playerId, color) {
         var blackDot = [parseInt(color.substr(0, 2), 16), parseInt(color.substr(2, 2), 16), parseInt(color.substr(4, 2), 16)].reduce(function (a, b) { return a + b; }) > 460;
-        return "<div class=\"dice dice" + number + " " + (blackDot ? 'black-dot' : 'white-dot') + "\" style=\"background-color: #" + color + "; border-color: #" + color + ";\" data-player-id=\"" + playerId + "\"></div>";
+        //return `<div class="dice dice${number} ${blackDot ? 'black-dot' : 'white-dot'}" style="background-color: #${color}; border-color: #${color};" data-player-id="${playerId}"></div>`;
+        var html = "<div class=\"dice dice" + number + "\" data-player-id=\"" + playerId + "\">\n            <ol class=\"die-list even-roll\" data-roll=\"" + number + "\">\n              <li class=\"die-item\" data-side=\"" + number + "\" style=\"background-color: #" + color + "; border-color: #" + color + ";\">";
+        for (var i = 1; i <= number; i++) {
+            html += "<span class=\"dot " + (blackDot ? 'black-dot' : 'white-dot') + "\"></span>";
+        }
+        html += "  </li>\n            </ol>\n            </div>";
+        return html;
     };
     LasVegas.prototype.moveDicesToCasino = function (casino, playerId_) {
         var _this = this;

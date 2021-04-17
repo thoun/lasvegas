@@ -123,7 +123,7 @@ class LasVegas implements LasVegasGame {
 
         //console.log( "Ending game setup" );
 
-        //colors.forEach(color => dojo.place(this.createDiceHtml(5, color), `dices-test`));
+        // COLORS.forEach(color => dojo.place(this.createDiceHtml(5, null, color), `dices-test`));
     } 
 
     ///////////////////////////////////////////////////
@@ -234,7 +234,17 @@ class LasVegas implements LasVegasGame {
 
         private createDiceHtml(number: number | string, playerId: number | string, color: string) {
             const blackDot = [parseInt(color.substr(0, 2), 16), parseInt(color.substr(2, 2), 16), parseInt(color.substr(4, 2), 16)].reduce((a, b) => a+b) > 460;
-            return `<div class="dice dice${number} ${blackDot ? 'black-dot' : 'white-dot'}" style="background-color: #${color}; border-color: #${color};" data-player-id="${playerId}"></div>`;
+            //return `<div class="dice dice${number} ${blackDot ? 'black-dot' : 'white-dot'}" style="background-color: #${color}; border-color: #${color};" data-player-id="${playerId}"></div>`;
+            let html = `<div class="dice dice${number}" data-player-id="${playerId}">
+            <ol class="die-list even-roll" data-roll="${number}">
+              <li class="die-item" data-side="${number}" style="background-color: #${color}; border-color: #${color};">`;
+            for (let i=1; i<=number; i++) {
+                html += `<span class="dot ${blackDot ? 'black-dot' : 'white-dot'}"></span>`;
+            }
+            html += `  </li>
+            </ol>
+            </div>`;
+            return html;
         }
 
         private moveDicesToCasino(casino: number, playerId_: number) {
