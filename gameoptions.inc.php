@@ -24,36 +24,35 @@
  *
  */
 
-$condition = array(
-    1 => array(),
-    2 => array(
-        array(
+$condition = [
+    1 => [],
+    2 => [
+        [
             'type' => 'maxplayers',
             'value' => 4,
             'message' => totranslate('Variant is limited to 4 players')
-        )
-    )
-);
+        ],
+    ],
+];
 
-$game_options = array(
-    100 => array(
+$game_options = [
+    100 => [
         'name' => totranslate('Neutral player variant'),
-        'values' => array(
-            1 => array(
+        'values' => [
+            1 => [
                 'name' => totranslate('No'), 
                 'description' => totranslate('Standard rules')
-            ),
-            2 => array(
+            ],
+            2 => [
                 'name' => totranslate('Yes'), 
                 'description' => totranslate('Neutral player is added'), 
                 'tmdisplay' => totranslate('Neutral player variant'),
                 'nobeginner' => true 
-            )
-        ),
+            ],
+        ],
         'displaycondition' => $condition,
         'startcondition' => $condition
-    )
-
-);
+    ],
+];
 
 
