@@ -264,6 +264,42 @@ var Casino = /** @class */ (function () {
     };
     return Casino;
 }());
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 var END_TURN_ANIMATIONS_DURATION = 1000;
 var COLORS = [
     '000000',
@@ -302,6 +338,7 @@ var LasVegas = /** @class */ (function () {
         //console.log( "Starting game setup" );
         var _this = this;
         this.gamedatas = gamedatas;
+        this.getGameAreaElement().insertAdjacentHTML('beforeend', "\n            <div id=\"dices-selector-and-counter\">\n                <div id=\"dices-selector\" class=\"whiteblock\"></div>\n                <div id=\"hand-counter\" class=\"whiteblock\"></div>\n            </div>\n\n            <div id=\"casinos\"></div>\n        ");
         this.neutralColor = COLORS.find(function (color) { return !Object.values(_this.gamedatas.players).some(function (player) { return player.color === color; }); });
         Object.values(this.gamedatas.players).forEach(function (player) {
             var html = "<div class=\"dice-counters\">" + _this.createDiceHtml(5, player.id, player.color) + " <span id=\"dice-counter-" + player.id + "\"></span>";
@@ -309,7 +346,7 @@ var LasVegas = /** @class */ (function () {
                 html += _this.createDiceHtml(5, player.id, _this.neutralColor) + " <span id=\"dice-counter-" + player.id + "-neutral\"></span>";
             }
             html += "</div>";
-            dojo.place(html, "player_board_" + player.id);
+            _this.getPlayerPanelElement(player.id).insertAdjacentHTML('beforeend', html);
             var dices = player.dices;
             var counter = new ebg.counter();
             counter.create("dice-counter-" + player.id);
@@ -424,11 +461,6 @@ var LasVegas = /** @class */ (function () {
     LasVegas.prototype.isVariant = function () {
         return this.gamedatas.variant;
     };
-    LasVegas.prototype.takeAction = function (action, data) {
-        data = data || {};
-        data.lock = true;
-        this.ajaxcall("/lasvegasthoun/lasvegasthoun/" + action + ".html", data, this, function () { });
-    };
     LasVegas.prototype.setTableDices = function (dices) {
         var _this = this;
         var playerId = this.getActivePlayerId();
@@ -455,11 +487,8 @@ var LasVegas = /** @class */ (function () {
         });
     };
     LasVegas.prototype.casinoSelected = function (casino) {
-        if (!this.checkAction('chooseCasino')) {
-            return;
-        }
         // this.moveDicesToCasino(casino, (this as any).getActivePlayerId());
-        this.takeAction("chooseCasino", {
+        this.bgaPerformAction("actChooseCasino", {
             casino: casino
         });
     };
@@ -544,67 +573,110 @@ var LasVegas = /** @class */ (function () {
     */
     LasVegas.prototype.setupNotifications = function () {
         //console.log( 'notifications subscriptions setup' );
-        var _this = this;
-        var notifs = [
-            ['newTurn', 1],
-            ['dicesPlayed', 1],
-            ['removeDuplicates', END_TURN_ANIMATIONS_DURATION],
-            ['collectBanknote', END_TURN_ANIMATIONS_DURATION],
-            ['removeBanknote', END_TURN_ANIMATIONS_DURATION],
-            ['removeDices', END_TURN_ANIMATIONS_DURATION],
-        ];
-        notifs.forEach(function (notif) {
-            dojo.subscribe(notif[0], _this, "notif_" + notif[0]);
-            _this.notifqueue.setSynchronous(notif[0], notif[1]);
+        this.bgaSetupPromiseNotifications();
+    };
+    LasVegas.prototype.notif_newTurn = function (args) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                this.updateTurnNumber(args.roundNumber);
+                this.placeFirstPlayerToken(args.playerId);
+                this.casinos.forEach(function (casino) { return casino.setNewBanknotes(args.casinos[casino.casino]); });
+                args.neutralDices.forEach(function (neutralDice) {
+                    _this.casinos[neutralDice].addSpaceForPlayer(0);
+                    dojo.place(_this.createDiceHtml(neutralDice, 0, _this.neutralColor), _this.casinos[neutralDice].getPlayerSpaceId(0));
+                    _this.casinos[neutralDice].reorderDices();
+                });
+                return [2 /*return*/];
+            });
         });
     };
-    LasVegas.prototype.notif_newTurn = function (notif) {
-        var _this = this;
-        this.updateTurnNumber(notif.args.roundNumber);
-        this.placeFirstPlayerToken(notif.args.playerId);
-        this.casinos.forEach(function (casino) { return casino.setNewBanknotes(notif.args.casinos[casino.casino]); });
-        notif.args.neutralDices.forEach(function (neutralDice) {
-            _this.casinos[neutralDice].addSpaceForPlayer(0);
-            dojo.place(_this.createDiceHtml(neutralDice, 0, _this.neutralColor), _this.casinos[neutralDice].getPlayerSpaceId(0));
-            _this.casinos[neutralDice].reorderDices();
+    LasVegas.prototype.notif_dicesPlayed = function (args) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                Array.from($('dices-selector').getElementsByClassName('dice')).forEach(function (dice) {
+                    dice.classList.remove('rolled');
+                });
+                this.moveDicesToCasino(args.casino, args.playerId);
+                this.dicesCounters[args.playerId].toValue(args.remainingDices.player);
+                if (this.isVariant()) {
+                    this.dicesCountersNeutral[args.playerId].toValue(args.remainingDices.neutral);
+                }
+                return [2 /*return*/];
+            });
         });
     };
-    LasVegas.prototype.notif_dicesPlayed = function (notif) {
-        Array.from($('dices-selector').getElementsByClassName('dice')).forEach(function (dice) {
-            dice.classList.remove('rolled');
+    LasVegas.prototype.notif_removeDuplicates = function (args) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        args.playersId.forEach(function (playerId) { return _this.casinos[args.casino].removeDices(playerId); });
+                        return [4 /*yield*/, this.wait(END_TURN_ANIMATIONS_DURATION)];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
         });
-        this.moveDicesToCasino(notif.args.casino, notif.args.playerId);
-        this.dicesCounters[notif.args.playerId].toValue(notif.args.remainingDices.player);
-        if (this.isVariant()) {
-            this.dicesCountersNeutral[notif.args.playerId].toValue(notif.args.remainingDices.neutral);
-        }
     };
-    LasVegas.prototype.notif_removeDuplicates = function (notif) {
-        var _this = this;
-        notif.args.playersId.forEach(function (playerId) { return _this.casinos[notif.args.casino].removeDices(playerId); });
+    LasVegas.prototype.notif_collectBanknote = function (args) {
+        return __awaiter(this, void 0, void 0, function () {
+            var points;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (args.playerId) {
+                            this.casinos[args.casino].slideBanknoteTo(args.id, args.playerId);
+                            points = args.value;
+                            this.scoreCtrl[args.playerId].incValue(points);
+                            this.setScoreSuffix(args.playerId);
+                            this.displayScoring("banknotes" + args.casino, this.gamedatas.players[args.playerId].color, points * 10000, END_TURN_ANIMATIONS_DURATION);
+                        }
+                        else {
+                            this.casinos[args.casino].removeBanknote(args.id);
+                        }
+                        this.casinos[args.casino].removeDices(args.playerId);
+                        return [4 /*yield*/, this.wait(END_TURN_ANIMATIONS_DURATION)];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
-    LasVegas.prototype.notif_collectBanknote = function (notif) {
-        if (notif.args.playerId) {
-            this.casinos[notif.args.casino].slideBanknoteTo(notif.args.id, notif.args.playerId);
-            var points = notif.args.value;
-            this.scoreCtrl[notif.args.playerId].incValue(points);
-            this.setScoreSuffix(notif.args.playerId);
-            this.displayScoring("banknotes" + notif.args.casino, this.gamedatas.players[notif.args.playerId].color, points * 10000, END_TURN_ANIMATIONS_DURATION);
-        }
-        else {
-            this.casinos[notif.args.casino].removeBanknote(notif.args.id);
-        }
-        this.casinos[notif.args.casino].removeDices(notif.args.playerId);
+    LasVegas.prototype.notif_removeBanknote = function (args) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        this.casinos[args.casino].removeBanknote(args.id);
+                        return [4 /*yield*/, this.wait(END_TURN_ANIMATIONS_DURATION)];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
-    LasVegas.prototype.notif_removeBanknote = function (notif) {
-        this.casinos[notif.args.casino].removeBanknote(notif.args.id);
-    };
-    LasVegas.prototype.notif_removeDices = function (notif) {
-        this.casinos.forEach(function (casino) { return casino.removeDices(); });
-        this.dicesCounters.forEach(function (dicesCounter) { return dicesCounter.setValue(notif.args.resetDicesNumber.player); });
-        if (this.isVariant()) {
-            this.dicesCountersNeutral.forEach(function (dicesCounter) { return dicesCounter.setValue(notif.args.resetDicesNumber.neutral); });
-        }
+    LasVegas.prototype.notif_removeDices = function (args) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        this.casinos.forEach(function (casino) { return casino.removeDices(); });
+                        this.dicesCounters.forEach(function (dicesCounter) { return dicesCounter.setValue(args.resetDicesNumber.player); });
+                        if (this.isVariant()) {
+                            this.dicesCountersNeutral.forEach(function (dicesCounter) { return dicesCounter.setValue(args.resetDicesNumber.neutral); });
+                        }
+                        return [4 /*yield*/, this.wait(END_TURN_ANIMATIONS_DURATION)];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
     LasVegas.prototype.formatDicesLog = function (playedDices, casino, playerColor) {
         var str = '';

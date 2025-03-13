@@ -1,0 +1,37 @@
+{
+    "100": {
+        "name": "Neutral player variant",
+        "values": {
+            "1": {
+                "name": "No",
+                "description": "Standard rules"
+            },
+            "2": {
+                "name": "Yes",
+                "description": "Neutral player is added",
+                "tmdisplay": "Neutral player variant",
+                "nobeginner": true
+            }
+        },
+        "displaycondition": {
+            "1": [],
+            "2": [
+                {
+                    "type": "maxplayers",
+                    "value": 4,
+                    "message": "Variant is limited to 4 players"
+                }
+            ]
+        },
+        "startcondition": {
+            "1": [],
+            "2": [
+                {
+                    "type": "maxplayers",
+                    "value": 4,
+                    "message": "Variant is limited to 4 players"
+                }
+            ]
+        }
+    }
+}

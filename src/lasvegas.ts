@@ -54,6 +54,15 @@ class LasVegas implements LasVegasGame {
         
         this.gamedatas = gamedatas;
 
+        (this as any).getGameAreaElement().insertAdjacentHTML('beforeend', `
+            <div id="dices-selector-and-counter">
+                <div id="dices-selector" class="whiteblock"></div>
+                <div id="hand-counter" class="whiteblock"></div>
+            </div>
+
+            <div id="casinos"></div>
+        `);
+
         this.neutralColor = COLORS.find(color => !Object.values(this.gamedatas.players).some(player => player.color === color));
 
         Object.values(this.gamedatas.players).forEach(player => {
@@ -63,7 +72,7 @@ class LasVegas implements LasVegasGame {
             }
             html += `</div>`;
 
-            dojo.place(html, `player_board_${player.id}` );
+            (this as any).getPlayerPanelElement(player.id).insertAdjacentHTML('beforeend', html);
 
             const dices: DicesCount = (player as any).dices;
             const counter = new ebg.counter();
@@ -198,12 +207,6 @@ class LasVegas implements LasVegasGame {
        private isVariant() {
            return this.gamedatas.variant;
        }
-    
-        private takeAction(action: string, data?: any) {
-            data = data || {};
-            data.lock = true;
-            (this as any).ajaxcall(`/lasvegasthoun/lasvegasthoun/${action}.html`, data, this, () => {});
-        }
 
         private setTableDices(dices: Dices) {
             const playerId = (this as any).getActivePlayerId();
@@ -227,13 +230,9 @@ class LasVegas implements LasVegasGame {
         }
 
         public casinoSelected(casino: number) {
-            if(!(this as any).checkAction('chooseCasino')) {
-                return;
-            }          
-
             // this.moveDicesToCasino(casino, (this as any).getActivePlayerId());
 
-            this.takeAction("chooseCasino", {
+            (this as any).bgaPerformAction("actChooseCasino", {
                 casino
             });
         }
@@ -328,74 +327,70 @@ class LasVegas implements LasVegasGame {
         setupNotifications() {
             //console.log( 'notifications subscriptions setup' );
 
-            const notifs = [
-                ['newTurn', 1],
-                ['dicesPlayed', 1],
-                ['removeDuplicates', END_TURN_ANIMATIONS_DURATION],
-                ['collectBanknote', END_TURN_ANIMATIONS_DURATION],
-                ['removeBanknote', END_TURN_ANIMATIONS_DURATION],
-                ['removeDices', END_TURN_ANIMATIONS_DURATION],
-            ];
-        
-            notifs.forEach((notif) => {
-                dojo.subscribe(notif[0], this, `notif_${notif[0]}`);
-                (this as any).notifqueue.setSynchronous(notif[0], notif[1]);
-            });
+            (this as any).bgaSetupPromiseNotifications();
         }
 
-        notif_newTurn(notif: Notif<NotifNewTurnArgs>) {
-            this.updateTurnNumber(notif.args.roundNumber);
-            this.placeFirstPlayerToken(notif.args.playerId);
-            this.casinos.forEach(casino => casino.setNewBanknotes(notif.args.casinos[casino.casino]));
+        async notif_newTurn(args: NotifNewTurnArgs) {
+            this.updateTurnNumber(args.roundNumber);
+            this.placeFirstPlayerToken(args.playerId);
+            this.casinos.forEach(casino => casino.setNewBanknotes(args.casinos[casino.casino]));
 
-            notif.args.neutralDices.forEach(neutralDice => {
+            args.neutralDices.forEach(neutralDice => {
                 this.casinos[neutralDice].addSpaceForPlayer(0);
                 dojo.place(this.createDiceHtml(neutralDice, 0, this.neutralColor), this.casinos[neutralDice].getPlayerSpaceId(0));
                 this.casinos[neutralDice].reorderDices();
             });
         }
 
-        notif_dicesPlayed(notif: Notif<NotifDicesPlayedArgs>) {
+        async notif_dicesPlayed(args: NotifDicesPlayedArgs) {
 
             Array.from($('dices-selector').getElementsByClassName('dice')).forEach((dice: HTMLDivElement) => {
                 dice.classList.remove('rolled');              
             });
 
-            this.moveDicesToCasino(notif.args.casino, notif.args.playerId);
-            this.dicesCounters[notif.args.playerId].toValue(notif.args.remainingDices.player);
+            this.moveDicesToCasino(args.casino, args.playerId);
+            this.dicesCounters[args.playerId].toValue(args.remainingDices.player);
             if (this.isVariant()) {                
-                this.dicesCountersNeutral[notif.args.playerId].toValue(notif.args.remainingDices.neutral);
+                this.dicesCountersNeutral[args.playerId].toValue(args.remainingDices.neutral);
             }
         }
 
-        notif_removeDuplicates(notif: Notif<NotifRemoveDuplicatesArgs>) {
-            notif.args.playersId.forEach(playerId => this.casinos[notif.args.casino].removeDices(playerId));
+        async notif_removeDuplicates(args: NotifRemoveDuplicatesArgs) {
+            args.playersId.forEach(playerId => this.casinos[args.casino].removeDices(playerId));
+
+            await (this as any).wait(END_TURN_ANIMATIONS_DURATION);
         }
 
-        notif_collectBanknote(notif: Notif<NotifCollectBanknoteArgs>) {
-            if (notif.args.playerId) {
-                this.casinos[notif.args.casino].slideBanknoteTo(notif.args.id, notif.args.playerId);
-                const points = notif.args.value;
-                (this as any).scoreCtrl[notif.args.playerId].incValue(points);
-                this.setScoreSuffix(notif.args.playerId);
+        async notif_collectBanknote(args: NotifCollectBanknoteArgs) {
+            if (args.playerId) {
+                this.casinos[args.casino].slideBanknoteTo(args.id, args.playerId);
+                const points = args.value;
+                (this as any).scoreCtrl[args.playerId].incValue(points);
+                this.setScoreSuffix(args.playerId);
 
-                (this as any).displayScoring( `banknotes${notif.args.casino}`, this.gamedatas.players[notif.args.playerId].color, points*10000, END_TURN_ANIMATIONS_DURATION);
+                (this as any).displayScoring( `banknotes${args.casino}`, this.gamedatas.players[args.playerId].color, points*10000, END_TURN_ANIMATIONS_DURATION);
             } else {
-                this.casinos[notif.args.casino].removeBanknote(notif.args.id);
+                this.casinos[args.casino].removeBanknote(args.id);
             }
-            this.casinos[notif.args.casino].removeDices(notif.args.playerId);
+            this.casinos[args.casino].removeDices(args.playerId);
+
+            await (this as any).wait(END_TURN_ANIMATIONS_DURATION);
         }
 
-        notif_removeBanknote(notif: Notif<NotifRemoveBanknoteArgs>) {
-            this.casinos[notif.args.casino].removeBanknote(notif.args.id);
+        async notif_removeBanknote(args: NotifRemoveBanknoteArgs) {
+            this.casinos[args.casino].removeBanknote(args.id);
+
+            await (this as any).wait(END_TURN_ANIMATIONS_DURATION);
         }
 
-        notif_removeDices(notif: Notif<NotifRemoveDicesArgs>) {
+        async notif_removeDices(args: NotifRemoveDicesArgs) {
             this.casinos.forEach(casino => casino.removeDices());
-            this.dicesCounters.forEach(dicesCounter => dicesCounter.setValue(notif.args.resetDicesNumber.player));
+            this.dicesCounters.forEach(dicesCounter => dicesCounter.setValue(args.resetDicesNumber.player));
             if (this.isVariant()) {
-                this.dicesCountersNeutral.forEach(dicesCounter => dicesCounter.setValue(notif.args.resetDicesNumber.neutral));
+                this.dicesCountersNeutral.forEach(dicesCounter => dicesCounter.setValue(args.resetDicesNumber.neutral));
             }
+
+            await (this as any).wait(END_TURN_ANIMATIONS_DURATION);
         }
 
     private formatDicesLog(playedDices: DicesCount, casino: number, playerColor: string) {
